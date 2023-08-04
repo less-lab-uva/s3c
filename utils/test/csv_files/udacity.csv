@@ -1,0 +1,46 @@
+ds,sg,t_id,node1,edge,node2
+Udacity,Udacity/test/center/1479425441182877835.jpg,0,ego car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441182877835.jpg,1,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441182877835.jpg,2,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441182877835.jpg,3,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441182877835.jpg,4,car,isIn,Right Lane
+Udacity,Udacity/test/center/1479425441232704425.jpg,0,ego car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441232704425.jpg,1,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441232704425.jpg,2,car,isIn,Right Lane
+Udacity,Udacity/test/center/1479425441232704425.jpg,3,person,isIn,Left Lane
+Udacity,Udacity/test/center/1479425441232704425.jpg,4,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441232704425.jpg,5,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441282730750.jpg,0,ego car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441282730750.jpg,1,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441282730750.jpg,2,car,isIn,Right Lane
+Udacity,Udacity/test/center/1479425441282730750.jpg,3,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441282730750.jpg,4,person,isIn,Left Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,0,ego car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,1,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,2,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,3,car,isIn,Right Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,4,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,5,person,isIn,Left Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,6,person,isIn,Left Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,7,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441332806714.jpg,8,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441382790272.jpg,0,ego car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441382790272.jpg,1,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441382790272.jpg,2,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441382790272.jpg,3,car,isIn,Right Lane
+Udacity,Udacity/test/center/1479425441382790272.jpg,4,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479425441382790272.jpg,5,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479426275491590239.jpg,0,ego car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479426275491590239.jpg,1,ego car,atDRearOf,car_2
+Udacity,Udacity/test/center/1479426275491590239.jpg,2,ego car,near,car_2
+Udacity,Udacity/test/center/1479426275491590239.jpg,3,ego car,atDRearOf,truck_3
+Udacity,Udacity/test/center/1479426275491590239.jpg,4,ego car,near,truck_3
+Udacity,Udacity/test/center/1479426275491590239.jpg,5,car,isIn,Left Lane
+Udacity,Udacity/test/center/1479426275491590239.jpg,6,car,isIn,Left Lane
+Udacity,Udacity/test/center/1479426275491590239.jpg,7,car,isIn,Middle Lane
+Udacity,Udacity/test/center/1479426275491590239.jpg,8,car,inDFrontOf,ego car
+Udacity,Udacity/test/center/1479426275491590239.jpg,9,car,near,ego car
+Udacity,Udacity/test/center/1479426275491590239.jpg,10,truck,isIn,Middle Lane
+Udacity,Udacity/test/center/1479426275491590239.jpg,11,truck,inDFrontOf,ego car
+Udacity,Udacity/test/center/1479426275491590239.jpg,12,truck,near,ego car
+Udacity,Udacity/test/center/1479426275491590239.jpg,13,car,isIn,Left Lane
