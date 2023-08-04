@@ -21,6 +21,7 @@ source study_data/generate_figures.sh
 |--------------|---|-------------------------------------------------------------------------------------------------------------------|
 | Fig. 3       | `study_data/figures/cluster_viz_carla_rsv.png`  | Distribution of images across scene graph equivalence classes for the *ELR* abstaction.                           |
 | Fig. 4       | `study_data/figures/num_clusters_80_20_trivial_inner_legend.png`  | Percentage of test failures not covered in training vs count of equivalence classes under different abstractions. |
+| Fig. 5       | `study_data/figures/tree.png`  | Test fail and Train classification tree for the *ELR* abstraction. |
 
 ### File naming scheme
 In the paper, we introduce 5 abstractions, *E*, *EL*, *ER*, *ELR*, and *ERS*.
