@@ -42,7 +42,7 @@ def cluster_figure_generator(arg_string):
         graph_type = dataset_file[dataset_file.rfind('/') + 1:dataset_file.rfind('.')]
         if graph_type not in graphs_to_show:
             continue
-        datasets[graph_type] = Dataset.load_from_file(args.input_path/dataset_file, '', '')
+        datasets[graph_type] = Dataset.load_from_file(dataset_file, '', '')
         cumulative = []
         count = 0
         box_vals[graph_type] = []
