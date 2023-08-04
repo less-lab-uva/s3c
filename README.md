@@ -5,7 +5,6 @@ This repository contains code and scripts to reproduce the results from S<sup>3<
 This has been tested on Ubuntu 18.04 and 20.04.
 The code uses anaconda and Python 3.9, which must be installed on the host system.
 Running `source env.sh` (which is done automatically by the below scripts), will set up a conda environment called `sg` and install all Python requirements.
-If a differet
 
 # Generating Figures and Data
 The `study_data` contains scripts for generating the figures and tables in the paper.
@@ -18,7 +17,11 @@ To recreate the figures and data, run:
 source study_data/generate_figures.sh
 ```
 
+This will take ~10-15 minutes. It generates intermediate data used by RQ1 and RQ2 in `study_data/results`. The final figures are stored in `study_data/figures/`.
+
 ## Figure information
+The final figures are stored in `study_data/figures/`.
+
 | Paper Figure | File                                                                  | Description                                                                                                                                                                                                                                                                                           |
 |--------------|-----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Fig. 3       | `study_data/figures/cluster_viz_carla_rsv.png`                        | Distribution of images across scene graph equivalence classes for the *ELR* abstaction.                                                                                                                                                                                                               |

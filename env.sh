@@ -6,7 +6,7 @@ if conda activate sg 2> /dev/null ; then
 else
     echo "Creating conda environment."
     conda create --prefix=sg python=3.9 --yes
-    pip install -r requirements.txt
     conda activate sg 2> /dev/null
+    pip install -r requirements.txt
 fi
 export PYTHONPATH=$PYTHONPATH:$(pwd)
