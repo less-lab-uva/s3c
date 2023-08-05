@@ -85,22 +85,26 @@ The default parameterization uses 45 degree increments, giving each of the 4 com
 
 # Repository Structure
 The repository is divided into the following folders. See the README in each folder for more information.
-* `carla`
+* `carla/`
   * Contains Python files and bash scripts for parsing study data from CARLA, which will be automatically run as part of `generate_figures.sh`.
-* `exploratory_work`
+* `env.sh`
+  * Shell script to set up the conda environment. Will be run automatically by `study_data/generate_figures.sh`.
+* `exploratory_work/`
   * Contains `exploratory_work.py` and precomputed data that can be used to generate right half of Table 3. Run `cd exploratory_work/ && python3 exploratory_work.py` 
-* `images`
+* `images/`
   * Images for this README
-* `pipeline`
+* `pipeline/`
   * Contains Python files to handle loading data from CARLA and the open-source datasets explored.
-* `rq1`
+* `requirements.txt`
+  * The Python dependencies required - will be installed into the conda environment by `env.sh`.
+* `rq1/`
   * Contains `new_study.py` which has the code used to train the model studied in RQ1.
-* `rq2`
-  * `a`
+* `rq2/`
+  * `a/`
     * Contains `rq2a.py` and precomputed data to generate the decision tree studied in RQ2 and shown in Figure 5, which will be automatically run as part of `generate_figures.sh`. NOTE: `tree.png` is 30,000 by 30,000 pixels to allow for zooming in to read the predicates. This file may not load on some machines. Figure 5 shows `tree_small.png` (1,500 by 1,500 pixels) to visualize the structure of the tree. 
-  * `b`
+  * `b/`
     * Contains `rq2b.py` and precomputed data to generate the precondition coverage studied in RQ2 and shown in Table 2, which will be automatically run as part of `generate_figures.sh`
-* `study_data`
+* `study_data/`
   * Contains `generate_figures.sh` and precomputed data. Running `generate_figures.sh` will save the relevant figures to `study_data/figures` and print data for the tables to the console.
-* `utils`
+* `utils/`
   * Contains code for performing the clustering operation. `dataset.py` also contains an interface for working with previously clustered data.
