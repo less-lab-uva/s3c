@@ -11,5 +11,5 @@ for i in "CarlaRSV carla_rsv"\
 do
   set -- $i # convert the "tuple" into the param args $1 $2...
   echo "Running ${1}"
-  python3 rq3/rq3_runner.py -dt $1 -dp $DATADIR -sp $DATADIR -dsf ${DATADIR}/${2}.json -j $JOBS --verbose
+  python3 utils/cluster_generator.py -dt $1 -dp $DATADIR -sp $DATADIR -dsf ${DATADIR}/${2}.json -j $JOBS --verbose
 done
