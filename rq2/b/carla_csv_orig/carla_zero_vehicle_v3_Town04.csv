@@ -1,0 +1,24 @@
+ds,sg,n_img,t_id,node1,edge,node2
+Town04_zero_car,Town04_zero_car/11_frame_1017.png,357,0,Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/11_frame_1017.png,357,1,ego,isIn,Ego Lane
+Town04_zero_car,Town04_zero_car/12_frame_1057.png,3538,0,Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/12_frame_1057.png,3538,1,Right 1 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/12_frame_1057.png,3538,2,Left 1 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/12_frame_1057.png,3538,3,Left 2 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/12_frame_1057.png,3538,4,ego,isIn,Ego Lane
+Town04_zero_car,Town04_zero_car/4_frame_3849.png,151,0,Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/4_frame_3849.png,151,1,Left 1 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/4_frame_3849.png,151,2,ego,isIn,Ego Lane
+Town04_zero_car,Town04_zero_car/10_frame_1001.png,2154,0,Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/10_frame_1001.png,2154,1,Right 1 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/10_frame_1001.png,2154,2,Right 2 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/10_frame_1001.png,2154,3,Right 3 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/10_frame_1001.png,2154,4,ego,isIn,Ego Lane
+Town04_zero_car,Town04_zero_car/4_frame_5549.png,113,0,Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/4_frame_5549.png,113,1,Right 1 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/4_frame_5549.png,113,2,ego,isIn,Ego Lane
+Town04_zero_car,Town04_zero_car/14_frame_2037.png,755,0,Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/14_frame_2037.png,755,1,Left 1 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/14_frame_2037.png,755,2,Left 2 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/14_frame_2037.png,755,3,Left 3 of Ego Lane,isIn,Root Road
+Town04_zero_car,Town04_zero_car/14_frame_2037.png,755,4,ego,isIn,Ego Lane

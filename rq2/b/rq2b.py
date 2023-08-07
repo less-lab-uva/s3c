@@ -352,12 +352,27 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-    # Load data
+    ### Load data
+    # Max vehicles
     max_vehicles = pd.read_csv(args.csv_folder / 'carla_max_vehicle_v3.csv')
     town01 = pd.read_csv(args.csv_folder / 'carla_max_vehicle_v3_Town01.csv')
     town02 = pd.read_csv(args.csv_folder / 'carla_max_vehicle_v3_Town02.csv')
     town04 = pd.read_csv(args.csv_folder / 'carla_max_vehicle_v3_Town04.csv')
     town10HD = pd.read_csv(args.csv_folder / 'carla_max_vehicle_v3_Town10HD.csv')
+
+    # Zero vehicles
+    zero_vehicles = pd.read_csv(args.csv_folder / 'carla_zero_vehicle_v3.csv')
+    zero_town01 = pd.read_csv(args.csv_folder / 'carla_zero_vehicle_v3_Town01.csv')
+    zero_town02 = pd.read_csv(args.csv_folder / 'carla_zero_vehicle_v3_Town02.csv')
+    zero_town04 = pd.read_csv(args.csv_folder / 'carla_zero_vehicle_v3_Town04.csv')
+    zero_town10HD = pd.read_csv(args.csv_folder / 'carla_zero_vehicle_v3_Town10HD.csv')
+
+    # Combine max and zero vehicles
+    max_vehicles = max_vehicles.append(zero_vehicles)
+    town01 = town01.append(zero_town01)
+    town02 = town02.append(zero_town02)
+    town04 = town04.append(zero_town04)
+    town10HD = town10HD.append(zero_town10HD)
 
     split_list = [max_vehicles, town01, town02, town04, town10HD]
     for split in split_list:

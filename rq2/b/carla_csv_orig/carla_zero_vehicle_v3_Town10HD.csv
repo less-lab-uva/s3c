@@ -1,0 +1,7 @@
+ds,sg,n_img,t_id,node1,edge,node2
+Town10HD_zero_car,Town10HD_zero_car/11_frame_0.png,2562,0,Ego Lane,isIn,Root Road
+Town10HD_zero_car,Town10HD_zero_car/11_frame_0.png,2562,1,Left 1 of Ego Lane,isIn,Root Road
+Town10HD_zero_car,Town10HD_zero_car/11_frame_0.png,2562,2,ego,isIn,Ego Lane
+Town10HD_zero_car,Town10HD_zero_car/13_frame_1037.png,1443,0,Ego Lane,isIn,Root Road
+Town10HD_zero_car,Town10HD_zero_car/13_frame_1037.png,1443,1,Right 1 of Ego Lane,isIn,Root Road
+Town10HD_zero_car,Town10HD_zero_car/13_frame_1037.png,1443,2,ego,isIn,Ego Lane

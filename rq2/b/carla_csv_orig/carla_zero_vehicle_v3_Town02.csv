@@ -1,0 +1,10 @@
+ds,sg,n_img,t_id,node1,edge,node2
+Town02_zero_car,Town02_zero_car/10_frame_1045.png,4546,0,Ego Lane,isIn,Root Road
+Town02_zero_car,Town02_zero_car/10_frame_1045.png,4546,1,ego,isIn,Ego Lane
+Town02_zero_car,Town02_zero_car/10_frame_1029.png,76,0,Ego Lane,isIn,Root Road
+Town02_zero_car,Town02_zero_car/10_frame_1029.png,76,1,ego,isIn,Ego Lane
+Town02_zero_car,Town02_zero_car/10_frame_1029.png,76,2,traffic_light_0,isIn,Opposing Lane 0
+Town02_zero_car,Town02_zero_car/10_frame_1029.png,76,3,Opposing Lane 0,isIn,Root Road
+Town02_zero_car,Town02_zero_car/10_frame_3693.png,39,0,Ego Lane,isIn,Root Road
+Town02_zero_car,Town02_zero_car/10_frame_3693.png,39,1,ego,isIn,Ego Lane
+Town02_zero_car,Town02_zero_car/10_frame_3693.png,39,2,traffic_light_0,isIn,Ego Lane
