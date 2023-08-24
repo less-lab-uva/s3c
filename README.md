@@ -20,10 +20,12 @@ The `study_data/model_results/` folder contains a CSV file with the predictions 
 To recreate the figures and data, run:
 
 ```bash
+source env.sh
 source study_data/generate_figures.sh
 ```
 
 This will take ~10-15 minutes. It generates intermediate data used by RQ1 and RQ2 in `study_data/results`. The final figures are stored in `study_data/figures/`.
+For further validation, the `study_data/full_study/` folder contains the `full_study.sh` script that will download the raw graph data from Zenodo and calculate the intermediate data and figures directly. This process takes 1-3 hours depending on network speed and computing resources. See `study_data/full_study/README.md` for more information.
 
 ## Figure information
 The final figures are stored in `study_data/figures/`.
