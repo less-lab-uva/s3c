@@ -60,7 +60,7 @@ class Carla(AbstractDataloader):
                                 img_path = town_folder/img_name
                                 self.img_list.append(img_path)
                                 aux_c += 1
-                                print(f"Loaded img {aux_c}")
+                                # print(f"Loaded img {aux_c}")
                 # Save img paths to csv file
                 if save_paths_to_csv:
                     img_path_list = []
@@ -80,7 +80,9 @@ class Carla(AbstractDataloader):
                         continue
                     town_folder = sgs_path/town
                     if town_folder.is_dir():
-                        for sg_name in sorted(os.listdir(town_folder)):
+                        dir_list = os.listdir(town_folder)
+                        sorted_dir_list = sorted(dir_list, key=get_key)
+                        for sg_name in sorted_dir_list:
                             if sg_name.endswith(f".{type}"):
                                 sg_path = town_folder/sg_name
                                 self.sg_list.append(sg_path)

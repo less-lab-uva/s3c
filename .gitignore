@@ -132,5 +132,10 @@ sg2vec/scripts/wandb/*
 
 # Custom
 .idea
-study_data/figures
-study_data/results
+study_data/figures/
+study_data/results/
+study_data/full_study/full_study_data/
+study_data/full_study/carla_clusters/
+study_data/full_study/results/
+study_data/full_study/figures/
+study_data/full_study/.zenodo

@@ -577,7 +577,8 @@ class Dataset:
             sorted_image_files = sorted(image_files)
             new_clusters[sorted_image_files[0]] = sorted_image_files
         self._clusters = new_clusters
-        return sorted(self._clusters.keys(), key=lambda img_file: len(self._clusters[img_file]), reverse=True)
+        return sorted(self._clusters.keys(),
+                      key=lambda img_file: (len(self._clusters[img_file]), img_file), reverse=True)
 
     def get_sorted_cluster_keys(self):
         return list(self._sorted_cluster_keys)
@@ -599,8 +600,15 @@ class Dataset:
             return False
         # If the clusters are correct then this should be definitionally correct, but add it to the eq check
         # so that the tests make sure that we enforce our invariants appropriately
-        if self._graph_metadata_groups != other._graph_metadata_groups:
+        if self._sorted_cluster_keys != other._sorted_cluster_keys:
             return False
+        if self._graph_metadata_groups.keys() != other._graph_metadata_groups.keys():
+            return False
+        for key in self._graph_metadata_groups:
+            self_str_set = set([str(posix_file) for posix_file in self._graph_metadata_groups[key]])
+            other_str_set = set([str(posix_file) for posix_file in other._graph_metadata_groups[key]])
+            if self_str_set != other_str_set:
+                return False
         if self._image_to_metadata != other._image_to_metadata:
             return False
         return True
