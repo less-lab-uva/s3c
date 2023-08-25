@@ -36,3 +36,7 @@ The system will download the following raw data
     * Equivalent intermediate data to that calculated by `generate_figures.sh` and stored in `study_data/results/`. Note that the file contents might be different due to ordering differences, though semantics are the same.
 * `full_study/figures/`
     * Equivalent figures to those created by `generate_figures.sh` and found in `study_data/figures`.
+* `rq2/a/splits_csv_orig/`
+    * CSV files containing the scene graphs that belong to the test failure and the train split.
+* `rq2/b/carla_csv_orig/`
+    * CSV files containing the scene graphs that belong to each of the towns with zero and max cars.

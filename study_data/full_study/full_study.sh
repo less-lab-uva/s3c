@@ -84,8 +84,15 @@ if test -f ".zenodo" ; then
   echo "Generating figures for RQ1"
   python3 carla/meta_figure_generator.py -i ${OUTER_SAVE_FILE}/ -o ${FIGURE_DIR}
 
-  echo "Checking that figures match between what was calculated locally and what was provided before"
-  diff 
+  echo "Creating CSV files for RQ2-A"
+  python3 rq2/a/create_csv_for_rq2a.py
+  echo "Creating CSV files for RQ2-B"
+  python3 rq2/b/create_csv_for_rq2b.py
+  echo "Generating RQ2-A data"
+  python3 rq2/a/rq2a.py
+  echo "Generating RQ2-B data"
+  python3 rq2/b/rq2b.py
+  
 else
   printf "Error downloading data at $(date). Please try again.\n"
 fi
