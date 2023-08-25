@@ -14,7 +14,7 @@ def main():
         "./study_data/full_study/full_study_data")
 
     # Check if output folder exists and creates it
-    output_path = Path("./rq2/a/splits_csv_orig/")
+    output_path = Path("./rq2/a/splits_csv/")
     if not output_path.exists():
         output_path.mkdir(parents=True, exist_ok=True)
 
