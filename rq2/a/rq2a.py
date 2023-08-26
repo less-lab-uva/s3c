@@ -172,6 +172,13 @@ parser.add_argument(
     default=Path("./rq2/a/splits_csv_orig/train_diff_test_fail.csv"),
     help="Train diff test fail Cluster (.json file). Default is ./rq2/a/splits_csv_orig/train_diff_test_fail.csv"
 )
+parser.add_argument(
+    "-output_folder_path",
+    type=Path,
+    required=False,
+    default=Path("./study_data/figures/"),
+    help="Output folder. Default is ./study_data/figures/"
+)
 
 def main():
     args = parser.parse_args()
@@ -238,13 +245,13 @@ def main():
     # Small plot
     plt.figure(figsize=(15, 15))
     tree.plot_tree(clf)
-    plt.savefig('./study_data/figures/tree_small.png')
+    plt.savefig(args.output_folder_path / 'tree_small.png')
     plt.close()
 
     # Big plot
     plt.figure(figsize=(300, 300))
     tree.plot_tree(clf)
-    plt.savefig('./study_data/figures/tree.png')
+    plt.savefig(args.output_folder_path / 'tree.png')
     plt.close()
 
     # Predicates explanations

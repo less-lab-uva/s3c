@@ -89,7 +89,7 @@ if test -f ".zenodo" ; then
   echo "Creating CSV files for RQ2-B"
   python3 rq2/b/create_csv_for_rq2b.py
   echo "Generating RQ2-A data"
-  python3 rq2/a/rq2a.py -cluster_path_1 ./rq2/a/splits_csv/test_fail_diff_train.csv -cluster_path_2 ./rq2/a/splits_csv/train_diff_test_fail.csv
+  python3 rq2/a/rq2a.py -cluster_path_1 ./rq2/a/splits_csv/test_fail_diff_train.csv -cluster_path_2 ./rq2/a/splits_csv/train_diff_test_fail.csv -output_folder_path ./figures/
   echo "Generating RQ2-B data" 
   python3 rq2/b/rq2b.py -csv_folder ./rq2/b/carla_csv/
   
