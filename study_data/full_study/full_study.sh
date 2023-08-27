@@ -84,10 +84,10 @@ if test -f ".zenodo" ; then
   echo "Generating figures for RQ1"
   python3 carla/meta_figure_generator.py -i ${OUTER_SAVE_FILE}/ -o ${FIGURE_DIR}
 
-#  echo "Creating CSV files for RQ2-A"
-#  python3 rq2/a/create_csv_for_rq2a.py
-#  echo "Creating CSV files for RQ2-B"
-#  python3 rq2/b/create_csv_for_rq2b.py
+  echo "Creating CSV files for RQ2-A"
+  python3 rq2/a/create_csv_for_rq2a.py
+  echo "Creating CSV files for RQ2-B"
+  python3 rq2/b/create_csv_for_rq2b.py
   echo "Generating RQ2-A data"
   python3 rq2/a/rq2a.py -cluster_path_1 ${S3C_BASE}/rq2/a/splits_csv/test_fail_diff_train.csv -cluster_path_2 ${S3C_BASE}/rq2/a/splits_csv/train_diff_test_fail.csv -output_folder_path ${BASE_DIR}/figures/
   echo "Generating RQ2-B data"
