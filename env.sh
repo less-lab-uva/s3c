@@ -8,6 +8,6 @@ else
     echo "Creating conda environment."
     conda create --prefix=sg python=3.9 --yes
     conda activate ./sg
-    pip install -r requirements.txt
+    python3 -m pip install -r requirements.txt
 fi
 export PYTHONPATH=$PYTHONPATH:$(pwd)
