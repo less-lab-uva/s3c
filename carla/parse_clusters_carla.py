@@ -239,11 +239,6 @@ def compute_best_fit(x, y):
 
 def compute_true_random(num_clusters, train_data, test_data, is_in_training, trial, fail_count, len_test, random_seed, index):
     gen = np.random.default_rng(seed=random_seed+index)
-    # int_info = np.iinfo(np.int32)
-    # # must be non-negative
-    # # https://github.com/numpy/numpy/issues/22745
-    # gen = np.random.default_rng(seed=gen.integers(0, int_info.max, num_clusters)[-1])
-    # gen = np.random.default_rng(seed=gen.integers(0, int_info.max, trial+1)[-1])
     all_images = list(is_in_training.keys())
     clusters = gen.integers(low=0, high=num_clusters, size=len(all_images))
     cluster_map = {image: clusters[index] for index, image in enumerate(all_images)}

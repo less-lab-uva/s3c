@@ -48,12 +48,19 @@ do
     mkdir -p "${save_dir}"
     python3 carla/parse_clusters_carla.py -dsf ${PHSYCOV_CLUSTER_DIR}/${dataset}.json -test "${MODEL_RESULTS_DIR}/${results}_results.csv" -o "${save_dir}"
   done
-  for dataset in "carla_rsv_time_2" "carla_rsv_time_5" "carla_rsv_time_10" "carla_abstract_time_2" "carla_abstract_time_5" "carla_abstract_time_10"
+  for dataset in "carla_rsv_time_2" "carla_rsv_time_3" "carla_rsv_time_5" "carla_rsv_time_10" "carla_abstract_time_2" "carla_abstract_time_3" "carla_abstract_time_5" "carla_abstract_time_10"
   do
     save_dir="${OUTER_SAVE_FILE}${results}/${dataset}/"
     echo "${save_dir}"
     mkdir -p "${save_dir}"
     python3 carla/parse_clusters_carla.py -dsf ${CLUSTER_DIR}/${dataset}.json -test "${MODEL_RESULTS_DIR}/${results}_results.csv" -o "${save_dir}"
+  done
+  for dataset in "rss_v2_10_time_2" "rss_v2_10_time_3" "rss_v2_10_time_5" "rss_v2_10_time_10"
+  do
+    save_dir="${OUTER_SAVE_FILE}${results}/${dataset}/"
+    echo "${save_dir}"
+    mkdir -p "${save_dir}"
+    python3 carla/parse_clusters_carla.py -dsf ${PHSYCOV_CLUSTER_DIR}/${dataset}.json -test "${MODEL_RESULTS_DIR}/${results}_results.csv" -o "${save_dir}"
   done
 done
 
