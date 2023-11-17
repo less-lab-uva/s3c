@@ -3,10 +3,13 @@ import copy
 import os
 import sys
 from collections import defaultdict
+from multiprocessing import Pool
 
 import cv2
 import scipy
 from tqdm import tqdm
+
+import venn
 
 from utils.dataset import Dataset
 from pathlib import Path
@@ -234,7 +237,91 @@ def compute_best_fit(x, y):
     plt.plot(unique_x, lof(unique_x), color='red')
     plt.plot(unique_x, [intercept + slope * xi for xi in unique_x])
 
-def calc_baselines(train_data, test_data, output_path, log_file, random_trials=10, label_precision=[0, 1e-4, 1e-3, 1e-2, 1e-1, 0.25, 0.5, 1, 2.5, 5], random_seed=1533):
+def compute_true_random(num_clusters, train_data, test_data, is_in_training, trial, fail_count, len_test, random_seed, index):
+    gen = np.random.default_rng(seed=random_seed+index)
+    # int_info = np.iinfo(np.int32)
+    # # must be non-negative
+    # # https://github.com/numpy/numpy/issues/22745
+    # gen = np.random.default_rng(seed=gen.integers(0, int_info.max, num_clusters)[-1])
+    # gen = np.random.default_rng(seed=gen.integers(0, int_info.max, trial+1)[-1])
+    all_images = list(is_in_training.keys())
+    clusters = gen.integers(low=0, high=num_clusters, size=len(all_images))
+    cluster_map = {image: clusters[index] for index, image in enumerate(all_images)}
+    reverse_cluster_map = defaultdict(list)
+    failure_map = {
+        row['image_file']: row['failed'] for index, row in test_data.iterrows()
+    }
+    failure_map.update({
+        row['image_file']: row['failed'] for index, row in train_data.iterrows()
+    })
+    for image, index in cluster_map.items():
+        reverse_cluster_map[index].append(image)
+    num_actual_clusters = len(set(list(reverse_cluster_map.keys())))
+    map_seen = {
+        index: any([is_in_training[image] for image in images]) for index, images in reverse_cluster_map.items()
+    }
+    test_data[f'weighted_random_{trial}_seen'] = test_data.apply(lambda x: map_seen[cluster_map[x.image_file]],axis=1)
+    seen_failures = len(test_data.loc[test_data['failed'] & test_data[f'weighted_random_{trial}_seen']])
+    unseen_tests = len(test_data.loc[test_data[f'weighted_random_{trial}_seen'] == False])
+    unseen_test_failures = len(
+        test_data.loc[test_data['failed'] & (test_data[f'weighted_random_{trial}_seen'] == False)])
+    total_seen = len(test_data.loc[test_data[f'weighted_random_{trial}_seen']])
+
+    num_new_failures = 0
+    num_new_failures_covered = 0
+    new_failure_classes = set()
+    new_failure_classes_covered = set()
+    for index, row in test_data.iterrows():
+        cluster_key = cluster_map[row.image_file]
+        if row['failed']:
+            training_data_from_cluster = train_data.loc[train_data['image_file'].isin(reverse_cluster_map[cluster_key])]
+            training_data_from_cluster_failed = training_data_from_cluster[training_data_from_cluster['failed'] == True]
+            if len(training_data_from_cluster_failed) == 0:
+                num_new_failures += 1
+                new_failure_classes.add(cluster_key)
+                if len(training_data_from_cluster) > 0:
+                    num_new_failures_covered += 1
+                    new_failure_classes_covered.add(cluster_key)
+    num_new_failure_classes = len(new_failure_classes)
+    num_new_failure_classes_covered = len(new_failure_classes_covered)
+    num_non_singleton_classes = 0
+    num_consistent_non_singleton_classes = 0
+    num_classes_with_failures = 0
+    num_classes_with_all_failures = 0
+    for cluster_key, images in reverse_cluster_map.items():
+        any_fail = any([failure_map[image] for image in images])
+        all_fail = all([failure_map[image] for image in images])
+        if any_fail:
+            num_classes_with_failures += 1
+        if all_fail:
+            num_classes_with_all_failures += 1
+        if len(images) > 1:
+            num_non_singleton_classes += 1
+            # if any is True and all is True, then they all consistently failed
+            # if any is False and all is False, then they all consistently succeeded
+            # if any is True and all is False, then they were inconsistent
+            # it is not possible for any to be False and all to be True
+            if any_fail == all_fail:
+                num_consistent_non_singleton_classes += 1
+
+
+    perc_unseen_tests_failures = unseen_test_failures / unseen_tests if unseen_tests > 0 else np.nan
+    failure_unseen_perc = unseen_test_failures / fail_count if fail_count > 0 else np.nan
+    mix = perc_unseen_tests_failures * failure_unseen_perc
+    return [trial, total_seen, total_seen / len_test,
+           seen_failures, seen_failures / fail_count,
+           unseen_test_failures, unseen_tests,
+           perc_unseen_tests_failures, mix, num_actual_clusters,
+           num_new_failures, num_new_failures_covered,
+           num_new_failure_classes, num_new_failure_classes_covered,
+           num_non_singleton_classes, num_consistent_non_singleton_classes,
+           sum([1 if failed else 0 for image, failed in failure_map.items()]),
+            num_classes_with_failures,
+            num_classes_with_all_failures
+           ]
+
+
+def calc_baselines(train_data, test_data, output_path, log_file, random_trials=10, random_seed=1533):
     fail_count = len(test_data.loc[test_data['failed']])
     precision_df = pd.DataFrame({
         'precision': pd.Series(dtype='float'),
@@ -251,40 +338,39 @@ def calc_baselines(train_data, test_data, output_path, log_file, random_trials=1
         'seen_mse': pd.Series(dtype='float'),
         'max_squared_error': pd.Series(dtype='float'),
         'total_mse': pd.Series(dtype='float'),
-        'num_frames': pd.Series(dtype='int')
+        'num_frames': pd.Series(dtype='int'),
+        'num_new_failures': pd.Series(dtype='int'),
+        'num_new_failures_covered': pd.Series(dtype='int'),
+        'num_new_failure_classes': pd.Series(dtype='int'),
+        'num_new_failure_classes_covered': pd.Series(dtype='int'),
+        'num_non_singleton_classes': pd.Series(dtype='int'),
+        'num_consistent_non_singleton_classes': pd.Series(dtype='int'),
+        'total_failures': pd.Series(dtype='int'),
+        'num_classes_with_failures': pd.Series(dtype='int'),
+        'num_classes_with_all_failures': pd.Series(dtype='int')
     })
     len_test = len(test_data)
-    for precision in label_precision:
-        if precision == 0:  # 0 means exact match
-            train_data[f'label_group_p{precision}'] = train_data.apply(lambda x: x.label_deg, axis=1)
-            test_data[f'label_group_p{precision}'] = test_data.apply(lambda x: x.label_deg, axis=1)
-        else:
-            train_data[f'label_group_p{precision}'] = train_data.apply(lambda x: int(x.label_deg / precision), axis=1)
-            test_data[f'label_group_p{precision}'] = test_data.apply(lambda x: int(x.label_deg / precision), axis=1)
-        test_data[f'label_group_p{precision}_seen'] = test_data.apply(lambda x: x[f'label_group_p{precision}'] in train_data[f'label_group_p{precision}'].values, axis=1)
-        num_clusters = len(pd.concat([train_data[f'label_group_p{precision}'], test_data[f'label_group_p{precision}']]).unique())
-        unseen_mse = np.mean(test_data.loc[test_data[f'label_group_p{precision}_seen'] == False]['squared_error'])
-        seen_mse = np.mean(test_data.loc[test_data[f'label_group_p{precision}_seen'] == True]['squared_error'])
-        max_squared_error = np.max(test_data['squared_error'])
-        total_mse = np.mean(test_data['squared_error'])
-        seen_failures = len(test_data.loc[test_data['failed'] & test_data[f'label_group_p{precision}_seen']])
-        unseen_tests = len(test_data.loc[test_data[f'label_group_p{precision}_seen'] == False])
-        unseen_test_failures = len(test_data.loc[test_data['failed'] & (test_data[f'label_group_p{precision}_seen'] == False)])
-        total_seen = len(test_data.loc[test_data[f'label_group_p{precision}_seen']])
-        print_file(f'For label precision {precision}, {total_seen} seen of {len_test} ({100 * total_seen / len_test:.2f}%), {seen_failures} failures seen of {fail_count} ({100*seen_failures/fail_count:.2f}%)', log_file)
-        if unseen_tests > 0:
-            print_file(f'For label precision {precision}, {unseen_test_failures} unseen test failures of {unseen_tests} unseen tests ({100*unseen_test_failures/unseen_tests:.2f}%)', log_file)
-        else:
-            print_file(f'For label precision {precision}, {unseen_test_failures} unseen test failures of {unseen_tests} unseen tests ({np.nan:.2f}%)', log_file)
-        perc_unseen_tests_failures = unseen_test_failures / unseen_tests if unseen_tests > 0 else np.nan
-        failure_unseen_perc = unseen_test_failures / fail_count if fail_count > 0 else np.nan
-        mix = perc_unseen_tests_failures * failure_unseen_perc
-        precision_df.loc[len(precision_df.index)] = [precision, total_seen, total_seen/len_test, seen_failures,
-                                                     seen_failures/fail_count, unseen_test_failures, unseen_tests,
-                                                     perc_unseen_tests_failures, mix, num_clusters, unseen_mse,
-                                                     seen_mse, max_squared_error, total_mse,
-                                                     len(test_data) + len(train_data)]
+    label_precision = [1e-5 * i for i in range(1000)]
+    label_precision.extend([1000 * 1e-5 + i * 1e-4 for i in range(1000)])
+    label_precision.extend([1000 * 1e-4 + i * 1e-3 for i in range(1000)])
+    print('Computing label precision')
+    with Pool() as pool:
+        results = {}
+        print('Dispatching label jobs')
+        for precision in tqdm(label_precision):
+            # output_vector = calculate_label_baseline(fail_count, precision, test_data, train_data, len_test)
+            results[precision] = pool.apply_async(calculate_label_baseline, (fail_count, precision, test_data, train_data, len_test))
+        print('Waiting for results')
+        for precision, result in tqdm(results.items()):
+            precision_df.loc[len(precision_df.index)] = result.get()
     precision_df.to_csv(f'{output_path}/label_groups.csv')
+    # calculate true random baseline
+    is_in_training = {}
+    for train_image in train_data['image_file'].values:
+        is_in_training[train_image] = True
+    for test_image in test_data['image_file'].values:
+        is_in_training[test_image] = False
+    gen = np.random.default_rng(seed=random_seed)
     weighted_random_df = pd.DataFrame({
         'trial': pd.Series(dtype='int'),
         'seen': pd.Series(dtype='int'),
@@ -294,63 +380,131 @@ def calc_baselines(train_data, test_data, output_path, log_file, random_trials=1
         'unseen_test_fails': pd.Series(dtype='int'),
         'unseen_tests': pd.Series(dtype='int'),
         'perc_unseen_tests_fail': pd.Series(dtype='float'),
-        'mix': pd.Series(dtype='float')
+        'mix': pd.Series(dtype='float'),
+        'num_clusters': pd.Series(dtype='int'),
+        'num_new_failures': pd.Series(dtype='int'),
+        'num_new_failures_covered': pd.Series(dtype='int'),
+        'num_new_failure_classes': pd.Series(dtype='int'),
+        'num_new_failure_classes_covered': pd.Series(dtype='int'),
+        'num_non_singleton_classes': pd.Series(dtype='int'),
+        'num_consistent_non_singleton_classes': pd.Series(dtype='int'),
+        'total_failures': pd.Series(dtype='int'),
+        'num_classes_with_failures': pd.Series(dtype='int'),
+        'num_classes_with_all_failures': pd.Series(dtype='int')
     })
-    weighted_random_seen = []
-    weighted_total_seen = []
-    gen = np.random.default_rng(seed=random_seed)
-    train_proportion = len(train_data) / (len(train_data) + len(test_data))
-    for trial in range(random_trials):
-        test_data[f'weighted_random_{trial}_seen'] = test_data.apply(lambda x: gen.random() < train_proportion, axis=1)
-        seen_failures = len(test_data.loc[test_data['failed'] & test_data[f'weighted_random_{trial}_seen']])
-        unseen_tests = len(test_data.loc[test_data[f'weighted_random_{trial}_seen'] == False])
-        unseen_test_failures = len(test_data.loc[test_data['failed'] & (test_data[f'weighted_random_{trial}_seen'] == False)])
-        total_seen = len(test_data.loc[test_data[f'weighted_random_{trial}_seen']])
-        weighted_random_seen.append(seen_failures)
-        weighted_total_seen.append(total_seen)
-        print_file(f'For weighted random trial {trial}, {total_seen} seen of {len_test} ({100 * total_seen / len_test:.2f}%), {seen_failures} failures seen of {fail_count} ({100*seen_failures/fail_count:.2f}%)', log_file)
-        print_file(f'For weighted random trial {trial}, {unseen_test_failures} unseen test failures of {unseen_tests} unseen tests ({100*unseen_test_failures/unseen_tests:.2f}%)', log_file)
-        perc_unseen_tests_failures = unseen_test_failures / unseen_tests if unseen_tests > 0 else np.nan
-        failure_unseen_perc = unseen_test_failures / fail_count if fail_count > 0 else np.nan
-        mix = perc_unseen_tests_failures * failure_unseen_perc
-        weighted_random_df.loc[len(weighted_random_df.index)] = [trial, total_seen, total_seen/len_test, seen_failures, seen_failures/fail_count, unseen_test_failures, unseen_tests, perc_unseen_tests_failures, mix]
-    seen_failures = np.mean(weighted_random_seen)
-    total_seen = np.mean(weighted_total_seen)
-    print_file(f'On average in {random_trials} weighted random trials, {total_seen} seen of {len_test} ({100 * total_seen / len_test:.2f}%), {seen_failures:.4f} failures seen of {fail_count} ({100*seen_failures/fail_count:.2f}%)', log_file)
-    weighted_random_df.loc[len(weighted_random_df.index)] = [-1, total_seen, total_seen/len_test, seen_failures, seen_failures/fail_count, -1, -1, -1, -1]
-    weighted_random_df.to_csv(f'{output_path}/weighted_random_groups.csv')
-    random_df = pd.DataFrame({
-        'trial': pd.Series(dtype='int'),
-        'seen': pd.Series(dtype='int'),
-        'seen_perc': pd.Series(dtype='float'),
-        'fail_seen': pd.Series(dtype='int'),
-        'fail_perc': pd.Series(dtype='float'),
-        'unseen_test_fails': pd.Series(dtype='int'),
-        'unseen_tests': pd.Series(dtype='int'),
-        'perc_unseen_tests_fail': pd.Series(dtype='float'),
-        'mix': pd.Series(dtype='float')
-    })
-    random_seen = []
-    random_total_seen = []
-    for trial in range(random_trials):
-        test_data[f'random_{trial}_seen'] = test_data.apply(lambda x: gen.random() < 0.5, axis=1)
-        seen_failures = len(test_data.loc[test_data['failed'] & test_data[f'random_{trial}_seen']])
-        unseen_tests = len(test_data.loc[test_data[f'random_{trial}_seen'] == False])
-        unseen_test_failures = len(test_data.loc[test_data['failed'] & (test_data[f'random_{trial}_seen'] == False)])
-        total_seen = len(test_data.loc[test_data[f'random_{trial}_seen']])
-        random_seen.append(seen_failures)
-        random_total_seen.append(total_seen)
-        print_file(f'For 50-50 random trial {trial}, {total_seen} seen of {len_test} ({100 * total_seen / len_test:.2f}%), {seen_failures} failures seen of {fail_count} ({100*seen_failures/fail_count:.2f}%)', log_file)
-        print_file(f'For 50-50 random trial {trial}, {unseen_test_failures} unseen test failures of {unseen_tests} unseen tests ({100*unseen_test_failures/unseen_tests:.2f}%)', log_file)
-        perc_unseen_tests_failures = unseen_test_failures / unseen_tests if unseen_tests > 0 else np.nan
-        failure_unseen_perc = unseen_test_failures / fail_count if fail_count > 0 else np.nan
-        mix = perc_unseen_tests_failures * failure_unseen_perc
-        random_df.loc[len(random_df.index)] = [trial, total_seen, total_seen/len_test, seen_failures, seen_failures/fail_count, unseen_test_failures, unseen_tests, perc_unseen_tests_failures, mix]
-    seen_failures = np.mean(random_seen)
-    total_seen = np.mean(random_total_seen)
-    print_file(f'On average in {random_trials} 50-50 random trials, {total_seen} seen of {len_test} ({100 * total_seen / len_test:.2f}%), {seen_failures:.4f} failures seen of {fail_count} ({100*seen_failures/fail_count:.2f}%)', log_file)
-    random_df.loc[len(random_df.index)] = [-1, total_seen, total_seen/len_test, seen_failures, seen_failures/fail_count, -1, -1, -1, -1]
-    precision_df.to_csv(f'{output_path}/random_groups.csv')
+    all_images = list(is_in_training.keys())
+    nums_to_check = [1]
+    prev_cur_num = [1]
+    cur_num = 2
+    num_frames = len(all_images)
+
+    def get_exp_val(cluster_count):
+        return cluster_count - cluster_count * np.power((cluster_count - 1) / cluster_count, num_frames)
+    prev = get_exp_val(cur_num)
+    while get_exp_val(cur_num) < .99 * num_frames:
+        prev = get_exp_val(cur_num)
+        if prev >= prev_cur_num[-1] + 100:
+            nums_to_check.append(cur_num)
+            prev_cur_num.append(prev)
+            # print(cur_num, prev)
+        cur_num += 1
+    print(f'Calculating {len(nums_to_check)} choices for true random')
+    results = []
+    index = 0
+    with Pool(30) as p:
+        print('Dispatching jobs')
+        for num_clusters in tqdm(nums_to_check):
+            if num_clusters < 1:
+                continue
+            for trial in range(1):
+                index += 1
+                r = p.apply_async(compute_true_random, (num_clusters, train_data, test_data, is_in_training, trial,
+                                                        fail_count, len_test, random_seed, index))
+                results.append(r)
+                # r = compute_true_random(num_clusters, test_data, is_in_training, trial,
+                #                                         fail_count, len_test, random_seed)
+                # weighted_random_df.loc[len(weighted_random_df.index)] = r
+        print('Waiting for jobs')
+        for r in tqdm(results):
+            weighted_random_df.loc[len(weighted_random_df.index)] = r.get()
+
+    weighted_random_df.to_csv(f'{output_path}/true_random.csv')
+
+
+def calculate_label_baseline(fail_count, precision, test_data, train_data, len_test):
+    if precision == 0:  # 0 means exact match
+        train_data[f'label_group_p{precision}'] = train_data.apply(lambda x: x.label_deg, axis=1)
+        test_data[f'label_group_p{precision}'] = test_data.apply(lambda x: x.label_deg, axis=1)
+    else:
+        train_data[f'label_group_p{precision}'] = train_data.apply(lambda x: int(x.label_deg / precision), axis=1)
+        test_data[f'label_group_p{precision}'] = test_data.apply(lambda x: int(x.label_deg / precision), axis=1)
+    test_data[f'label_group_p{precision}_seen'] = test_data.apply(
+        lambda x: x[f'label_group_p{precision}'] in train_data[f'label_group_p{precision}'].values, axis=1)
+    clusters = pd.concat([train_data[f'label_group_p{precision}'], test_data[f'label_group_p{precision}']]).unique()
+    num_clusters = len(clusters)
+    unseen_mse = np.mean(test_data.loc[test_data[f'label_group_p{precision}_seen'] == False]['squared_error'])
+    seen_mse = np.mean(test_data.loc[test_data[f'label_group_p{precision}_seen'] == True]['squared_error'])
+    max_squared_error = np.max(test_data['squared_error'])
+    total_mse = np.mean(test_data['squared_error'])
+    seen_failures = len(test_data.loc[test_data['failed'] & test_data[f'label_group_p{precision}_seen']])
+    unseen_tests = len(test_data.loc[test_data[f'label_group_p{precision}_seen'] == False])
+    unseen_test_failures = len(
+        test_data.loc[test_data['failed'] & (test_data[f'label_group_p{precision}_seen'] == False)])
+    total_seen = len(test_data.loc[test_data[f'label_group_p{precision}_seen']])
+    num_new_failures = 0
+    num_new_failures_covered = 0
+    new_failure_classes = set()
+    new_failure_classes_covered = set()
+    for index, row in test_data.iterrows():
+        cluster_key = row[f'label_group_p{precision}']
+        if row['failed']:
+            training_data_from_cluster = train_data.loc[train_data[f'label_group_p{precision}'] == cluster_key]
+            training_data_from_cluster_failed = training_data_from_cluster[
+                training_data_from_cluster['failed'] == True]
+            if len(training_data_from_cluster_failed) == 0:
+                num_new_failures += 1
+                new_failure_classes.add(cluster_key)
+                if len(training_data_from_cluster) > 0:
+                    num_new_failures_covered += 1
+                    new_failure_classes_covered.add(cluster_key)
+    num_new_failure_classes = len(new_failure_classes)
+    num_new_failure_classes_covered = len(new_failure_classes_covered)
+    num_non_singleton_classes = 0
+    num_consistent_non_singleton_classes = 0
+    num_classes_with_failures = 0
+    num_classes_with_all_failures = 0
+    for cluster_key in clusters:
+        train_data_in_cluster = train_data.loc[train_data[f'label_group_p{precision}'] == cluster_key]
+        test_data_in_cluster = test_data.loc[test_data[f'label_group_p{precision}'] == cluster_key]
+        any_fail = any([train_data_in_cluster['failed'].any(), test_data_in_cluster['failed'].any()])
+        all_fail = all([train_data_in_cluster['failed'].all(), test_data_in_cluster['failed'].all()])
+        if any_fail:
+            num_classes_with_failures += 1
+        if all_fail:
+            num_classes_with_all_failures += 1
+        if len(train_data_in_cluster) + len(test_data_in_cluster) > 1:
+            num_non_singleton_classes += 1
+            # if any is True and all is True, then they all consistently failed
+            # if any is False and all is False, then they all consistently succeeded
+            # if any is True and all is False, then they were inconsistent
+            # it is not possible for any to be False and all to be True
+            if any_fail == all_fail:
+                num_consistent_non_singleton_classes += 1
+    perc_unseen_tests_failures = unseen_test_failures / unseen_tests if unseen_tests > 0 else np.nan
+    failure_unseen_perc = unseen_test_failures / fail_count if fail_count > 0 else np.nan
+    mix = perc_unseen_tests_failures * failure_unseen_perc
+    return [precision, total_seen, total_seen/len_test, seen_failures,
+                                                     seen_failures/fail_count, unseen_test_failures, unseen_tests,
+                                                     perc_unseen_tests_failures, mix, num_clusters, unseen_mse,
+                                                     seen_mse, max_squared_error, total_mse,
+                                                     len(test_data) + len(train_data),
+                                                     num_new_failures, num_new_failures_covered,
+                                                     num_new_failure_classes, num_new_failure_classes_covered,
+                                                     num_non_singleton_classes, num_consistent_non_singleton_classes,
+                                                     len(test_data.loc[test_data['failed']]) +
+                                                     len(train_data.loc[train_data['failed']]),
+                                                     num_classes_with_failures,
+                                                     num_classes_with_all_failures]
 
 
 def parse_data(arg_string):
@@ -359,6 +513,9 @@ def parse_data(arg_string):
     os.makedirs(str(output_path.absolute()), exist_ok=True)
     dataset = Dataset.load_from_file(args.dataset_file, '')
     image_to_cluster = dataset.image_to_cluster_map()
+    cluster_to_image = defaultdict(list)
+    for image, cluster in image_to_cluster.items():
+        cluster_to_image[cluster].append(image)
     failure_thresh = args.failure_thresh_deg / (2 * args.deg_factor)
     log_file = f'{output_path}/log.txt'
     if os.path.exists(log_file):
@@ -395,7 +552,12 @@ def parse_data(arg_string):
             full_data = full_data.loc[abs(full_data['label_deg']) <= args.filter_deg]
         test_data = full_data.loc[full_data['split'] == 'test'].copy()
         train_data = full_data.loc[full_data['split'] == 'train']
-        if 'abstract' in str(args.dataset_file):
+        training_map = {
+            row['image_file']: row['split'] == 'train' for index, row in full_data.iterrows()
+        }
+        print(f'{len(train_data.loc[train_data["failed"]])} failed training points')
+        print(f'{len(test_data.loc[test_data["failed"]])} failed testing points')
+        if 'carla_abstract.json' in str(args.dataset_file):
             calc_baselines(train_data.copy(), test_data.copy(), output_path, log_file)
         print_file(f'Data is split into {len(train_data)} ({100*len(train_data) / len(full_data):.1f}%) train and {len(test_data)} test ({100*len(test_data) / len(full_data):.1f}%) of {len(full_data)} total', log_file)
         filter_and_save_clusters(dataset, full_data, output_path, test_data, train_data)
@@ -406,12 +568,28 @@ def parse_data(arg_string):
             cluster_key = image_to_cluster[row.image_file]
             cluster_to_train_count[cluster_key] += 1
             clusters_in_training.add(cluster_key)
+        num_new_failures = 0
+        num_new_failures_covered = 0
+        new_failure_classes = set()
+        new_failure_classes_covered = set()
         for index, row in test_data.iterrows():
             cluster_key = image_to_cluster[row.image_file]
             clusters_in_testing.add(cluster_key)
+            if row['failed']:
+                training_data_from_cluster = train_data.loc[train_data['cluster_key'] == cluster_key]
+                training_data_from_cluster_failed = training_data_from_cluster[training_data_from_cluster['failed'] == True]
+                if len(training_data_from_cluster_failed) == 0:
+                    num_new_failures += 1
+                    new_failure_classes.add(cluster_key)
+                    if len(training_data_from_cluster) > 0:
+                        num_new_failures_covered += 1
+                        new_failure_classes_covered.add(cluster_key)
+        num_new_failure_classes = len(new_failure_classes)
+        num_new_failure_classes_covered = len(new_failure_classes_covered)
         only_in_test = clusters_in_testing.difference(clusters_in_training)
         only_in_train = clusters_in_training.difference(clusters_in_testing)
         clusters_in_both = clusters_in_training.intersection(clusters_in_testing)
+
         print_file(f'Only in test: {len(only_in_test)} clusters containing {sum([len(dataset._clusters[c]) for c in only_in_test])} images', log_file)
         print_file(f'Only in train: {len(only_in_train)} clusters containing {sum([len(dataset._clusters[c]) for c in only_in_train])} images', log_file)
         print_file(f'In both: {len(clusters_in_both)} clusters containing {sum([len(dataset._clusters[c]) for c in clusters_in_both])} images', log_file)
@@ -471,6 +649,9 @@ def parse_data(arg_string):
                 cv2.imwrite(f'{save_folder}{save_image}', image)
         failed_train = train_data.loc[train_data['failed']]
         failed_full = full_data.loc[full_data['failed']]
+        failure_map = {
+            row['image_file']: row['failed'] for index, row in full_data.iterrows()
+        }
         number_in_training = {}  # map from cluster key to # of times that cluster is seen in training
         number_tests_failed = {}
         number_in_tests = {}
@@ -508,7 +689,8 @@ def parse_data(arg_string):
         test_data_unseen = test_data.loc[test_data['cluster_key'].isin(only_in_test)]
         test_failures_on_seen_data = test_data_seen.loc[test_data_seen['failed']]
         test_failures_on_unseen_data = test_data_unseen.loc[test_data_unseen['failed']]
-        num_clusters = len(pd.concat([train_data['cluster_key'], test_data['cluster_key']]).unique())
+        clusters = pd.concat([train_data['cluster_key'], test_data['cluster_key']]).unique()
+        num_clusters = len(clusters)
         unseen_mse = np.mean(test_data_unseen['squared_error'])
         seen_mse = np.mean(test_data_seen['squared_error'])
         max_squared_error = np.max(test_data['squared_error'])
@@ -530,15 +712,99 @@ def parse_data(arg_string):
             'unseen_mse': pd.Series(dtype='float'),
             'seen_mse': pd.Series(dtype='float'),
             'max_squared_error': pd.Series(dtype='float'),
-            'total_mse': pd.Series(dtype='float')
+            'total_mse': pd.Series(dtype='float'),
+            'num_new_failures': pd.Series(dtype='int'),
+            'num_new_failures_covered': pd.Series(dtype='int'),
+            'num_new_failure_classes': pd.Series(dtype='int'),
+            'num_new_failure_classes_covered': pd.Series(dtype='int'),
+            'num_non_singleton_classes': pd.Series(dtype='int'),
+            'num_consistent_non_singleton_classes': pd.Series(dtype='int'),
+            'total_failures': pd.Series(dtype='int'),
+            'num_classes_with_failures': pd.Series(dtype='int'),
+            'num_classes_with_all_failures': pd.Series(dtype='int')
         })
         perc_unseen_tests_failures = len(test_failures_on_unseen_data) / len(test_data_unseen) if len(test_data_unseen) > 0 else np.nan
         failure_unseen_perc = len(test_failures_on_unseen_data)/len(failed_tests) if len(failed_tests) > 0 else np.nan
         mix = perc_unseen_tests_failures * failure_unseen_perc
+
+        num_non_singleton_classes = 0
+        num_consistent_non_singleton_classes = 0
+        num_classes_with_failures = 0
+        num_classes_with_all_failures = 0
+        print('Checking homogeneity')
+        for cluster_key in tqdm(clusters):
+            images = cluster_to_image[cluster_key]
+            any_fail = any([failure_map[image] for image in images])
+            all_fail = all([failure_map[image] for image in images])
+            if any_fail:
+                num_classes_with_failures += 1
+            if all_fail:
+                num_classes_with_all_failures += 1
+            if len(images) > 1:
+                num_non_singleton_classes += 1
+                # if any is True and all is True, then they all consistently failed
+                # if any is False and all is False, then they all consistently succeeded
+                # if any is True and all is False, then they were inconsistent
+                # it is not possible for any to be False and all to be True
+                if any_fail == all_fail:
+                    num_consistent_non_singleton_classes += 1
+
         graph_df.loc[len(graph_df.index)] = [training_town, len(test_data_seen), len(test_data_seen)/len(test_data), len(test_failures_on_seen_data),
                                              len(test_failures_on_seen_data)/len(failed_tests), len(test_failures_on_unseen_data), len(test_data_unseen), perc_unseen_tests_failures, mix,
-                                             num_clusters, unseen_mse, seen_mse, max_squared_error, total_mse]
+                                             num_clusters, unseen_mse, seen_mse, max_squared_error, total_mse,
+                                             num_new_failures, num_new_failures_covered,
+                                             num_new_failure_classes, num_new_failure_classes_covered,
+                                             num_non_singleton_classes, num_consistent_non_singleton_classes,
+                                             len(failed_full),
+                                             num_classes_with_failures,
+                                             num_classes_with_all_failures
+                                             ]
         graph_df.to_csv(f'{output_path}/seen_stats.csv')
+        clusters_with_training = set()
+        clusters_with_tests = set()
+        clusters_with_failures = set()
+        clusters_with_pass = set()
+        clusters_with_test_pass = set()
+        clusters_with_test_fail = set()
+        clusters_with_train_pass = set()
+        clusters_with_train_fail = set()
+        for cluster_key in clusters:
+            images = cluster_to_image[cluster_key]
+            any_fail = any([failure_map[image] for image in images])
+            all_fail = all([failure_map[image] for image in images])
+            any_train = any([training_map[image] for image in images])
+            all_train = all([training_map[image] for image in images])
+            if any_train:
+                clusters_with_training.add(cluster_key)
+            if not all_train:
+                # this means some were test
+                clusters_with_tests.add(cluster_key)
+            if any_fail:
+                clusters_with_failures.add(cluster_key)
+            if not all_fail:
+                # this means some passed
+                clusters_with_pass.add(cluster_key)
+            if any([failure_map[image] and training_map[image] for image in images]):
+                clusters_with_train_fail.add(cluster_key)
+            if any([(not failure_map[image]) and training_map[image] for image in images]):
+                clusters_with_train_pass.add(cluster_key)
+            if any([failure_map[image] and (not training_map[image]) for image in images]):
+                clusters_with_test_fail.add(cluster_key)
+            if any([(not failure_map[image]) and (not training_map[image]) for image in images]):
+                clusters_with_test_pass.add(cluster_key)
+        labels = venn.get_labels(
+            [clusters_with_training, clusters_with_tests, clusters_with_pass, clusters_with_failures],
+            fill=['number', 'logic'])
+        fig, ax = venn.venn4(labels, names=['Train', 'Test', 'Pass', 'Fail'])
+        fig.savefig(f'{output_path}/train_test_pass_fail_class_venn.png')
+        labels = venn.get_labels(
+            [clusters_with_train_pass, clusters_with_train_fail, clusters_with_test_pass, clusters_with_test_fail],
+            fill=['number', 'logic'])
+        fig, ax = venn.venn4(labels, names=['Train Pass', 'Train Fail', 'Test Pass', 'Test Fail'])
+        fig.savefig(f'{output_path}/class_venn.png')
+        intersection_1111 = clusters_with_train_fail.intersection(clusters_with_train_pass).intersection(clusters_with_test_fail).intersection(clusters_with_test_pass)
+        print(intersection_1111)
+
         if len(failed_tests) > 0 and len(test_data_unseen) > 0:
             perc_unseen_tests_fail = len(test_failures_on_unseen_data) / len(test_data_unseen)
             perc_failures_on_unseen = len(test_failures_on_unseen_data) / len(failed_tests)
@@ -547,37 +813,7 @@ def parse_data(arg_string):
             combined_metric = np.nan
         print_file(f'Combined metric: {100*combined_metric:.2f}%', log_file)
         plot_failed_data(fail_df, training_town, args.failure_thresh_deg, output_path, filter_deg=args.filter_deg, log_file=log_file)
-        # FIXME: this does not do that it says bc 80% does 80% _of the train that failed_ not 80% of train
-        # plot_failed_data(fail_df_fail_only, training_town, args.failure_thresh_deg, output_path, True)
-        # cluster_size_correlation(dataset, fail_df, training_town, args.failure_thresh_deg, output_path)
-
-        # cluster_size_to_training_seen = defaultdict(int)
-        # cluster_size_to_testing_fails = defaultdict(int)
-        # cluster_size_to_testing_total = defaultdict(int)
-        # for cluster_key in sorted_keys:
-        #     cluster_size_to_training_seen[len(dataset.get_cluster(cluster_key))] += number_in_training[cluster_key] if cluster_key in number_in_training else 0
-        #     cluster_size_to_testing_fails[len(dataset.get_cluster(cluster_key))] += number_tests_failed[cluster_key] if cluster_key in number_tests_failed else 0
-        #     cluster_size_to_testing_total[len(dataset.get_cluster(cluster_key))] += number_in_tests[cluster_key] if cluster_key in number_in_tests else 0
-        # cluster_size_to_training_seen_arr = []
-        # cluster_size_to_testing_fails_arr = []
-        # cluster_size_to_test_fail_rate_arr = []
-        # for cluster_size in cluster_size_to_training_seen:
-        #     cluster_size_to_training_seen_arr.append(cluster_size_to_training_seen[cluster_size])
-        #     cluster_size_to_testing_fails_arr.append(cluster_size_to_testing_fails[cluster_size])
-        #     cluster_size_to_test_fail_rate_arr.append(0 if cluster_size_to_testing_total[cluster_size] == 0 else (100 * cluster_size_to_testing_fails[cluster_size] / cluster_size_to_testing_total[cluster_size]))
-        # plt.scatter(cluster_size_to_training_seen_arr, cluster_size_to_testing_fails_arr)
-        # plt.title('# of test failures for clusters of size X vs # of training images for clusters of size X ')
-        # plt.ylabel('# of failures')
-        # plt.xlabel('# of of training images')
-        # compute_best_fit(cluster_size_to_training_seen_arr, cluster_size_to_testing_fails_arr)
-        # plt.show()
-        # plt.scatter(cluster_size_to_training_seen_arr, cluster_size_to_test_fail_rate_arr)
-        # plt.title('Test failure % for clusters of size X vs # of training images for clusters of size X')
-        # plt.ylabel('Failure Rate')
-        # plt.xlabel('# of of training images')
-        # plt.show()
         return
-        # quit()
 
 
 def filter_and_save_clusters(dataset, full_data, output_path, test_data, train_data):

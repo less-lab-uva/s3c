@@ -1,6 +1,10 @@
 #! /bin/bash
 
 cd $(dirname ${BASH_SOURCE})/..
+echo "Parsing PhysCov comparison data for RQ1"
+source carla/parse_physcov.sh
+echo "Generating time sequence data"
+source carla/gen_time_sequence.sh
 echo "Parsing data for RQ1 and RQ2"
 source carla/parse_all_clusters.sh
 echo "Generating figures for Approach"

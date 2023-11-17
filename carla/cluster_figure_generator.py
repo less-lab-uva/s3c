@@ -57,7 +57,7 @@ def cluster_figure_generator(arg_string):
     max_frames = max([x[-1] for x in x_vals.values()])
 
     for index, graph_type in enumerate(graphs_to_show):
-        if 'Label' in graph_type:
+        if 'Label' in graph_type or 'rss' in graph_type:
             continue
         # fig = plt.figure(figsize=(6.4 * 3, 4.8 * 2))
         fig = plt.figure()
@@ -93,17 +93,22 @@ def cluster_figure_generator(arg_string):
         ax2.hlines(vals[0], 0, cur_max_index, label='Largest Class', color='k')
         ax2.set_ylim(bottom=0)
         ax1.set_ylim(bottom=0)
+        if graph_type == 'carla_rsv':
+            # Choose the ticks nicely for the one shown in the paper
+            ax1.set_yticks([i * 2500 for i in range(5)])
         ax2.tick_params(axis='y', labelcolor=color)
         ax2.set_xlabel('Equivalence Class ID')
         ax2.set_ylabel('Cumulative Images Covered', color=color)
         fig.suptitle(f'{label_map[graph_type]} Equivalence Class Partitions')  # , fontsize=16
         fig.savefig(f'{output_path}/cluster_viz_{graph_type}.png', bbox_inches='tight')
+        fig.savefig(f'{output_path}/cluster_viz_{graph_type}.svg', bbox_inches='tight')
+        fig.savefig(f'{output_path}/cluster_viz_{graph_type}.pdf', bbox_inches='tight')
         plt.close(fig)
 
     fig = plt.figure()
     ax = fig.gca()
     for index, graph_type in enumerate(graphs_to_show):
-        if 'Label' in graph_type:
+        if 'Label' in graph_type or 'rss' in graph_type:
             continue
         vals = x_vals[graph_type]
         ax.plot([i for i in range(len(vals))], vals, color=f'C{index}', label=f'{label_map[graph_type]}')
@@ -121,7 +126,7 @@ def cluster_figure_generator(arg_string):
     fig = plt.figure()
     ax = fig.gca()
     for index, graph_type in enumerate(graphs_to_show):
-        if 'Label' in graph_type:
+        if 'Label' in graph_type or 'rss' in graph_type:
             continue
         vals = x_vals[graph_type]
         ax.plot([i for i in range(len(vals))], vals, color=f'C{index}', label=f'{label_map[graph_type]}')
@@ -133,13 +138,12 @@ def cluster_figure_generator(arg_string):
     plt.close(fig)
 
     fig = plt.figure()
-    ax = fig.gca()
     lower_xlim = -2000
     ax.set_xlim(left=lower_xlim, right=max_index-lower_xlim)
     extra_x_ticks = set()
     extra_y_ticks = {0}
     for index, graph_type in enumerate(graphs_to_show):
-        if 'Label' in graph_type:
+        if 'Label' in graph_type or 'rss' in graph_type:
             continue
         vals = x_vals[graph_type]
         ax.plot([i for i in range(len(vals))], vals, color=f'C{index}', label=f'{label_map[graph_type]}')

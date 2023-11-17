@@ -142,3 +142,5 @@ study_data/full_study/figures/
 study_data/full_study/.zenodo
 rq2/a/splits_csv/
 rq2/b/carla_csv/
+study_data/physcov_clusters/
+*_time_*.json
