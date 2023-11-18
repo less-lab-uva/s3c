@@ -68,7 +68,7 @@ We also note that the time information allows *ELR*[10] to achieve a similar PNF
 Additionally, we observe that although the time-dimension information helps PhysCov increase the PNFNC metric, its performance relative to the random baseline decreases, and it experiences a far greater increase in the number of equivalence classes than either of the scene-graph based approaches.
 
 
-![time_image_data](../images/TIME_new_num_clusters_80_20_trivial_legend_below.svg)
+![time_image_data](../images/TIME_new_num_clusters_80_20_trivial_legend_below.png)
 
 ### Number of Equivalence Classes
 <table>
