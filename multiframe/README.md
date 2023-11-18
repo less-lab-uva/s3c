@@ -16,9 +16,11 @@ In these cases, we fill in a label of `UNKNOWN` and consider all `UNKNOWN` data 
 Now, each scene graph has a *t*-tuple describing the equivalence classes of the scene graphs over the previous *t* frames.
 We then re-cluster the scene graphs using the *t*-tuple as the basis for equivalence, i.e., two scene graphs are equivalent if they are equivalent *and their previous t-1 graphs are also equivalent*. 
 Note that for *t*=1 this is equivalent to the original clustering. 
-This algorithm is implemented in `carla/gen_time_sequence.py` and described in psuedocode below.
+This algorithm is implemented in `carla/gen_time_sequence.py` and described in pseudocode below.
 
 The new clustering *ASC<sub>C</sub><sup>t</sup>* will have at least as many equivalence classes as *ASG<sub>C</sub>*, but may have many more.
+
+We note that the new clustering retains the interpretability of the scene graphs used to generate the time-tuple, though future work should explore the interpretability of these *sequences* of scene graphs.
 
 ```python
 def get_time_clustering(frame_list: List[Frame], sg_clustering: Set[Set[SG]], time_window: int):

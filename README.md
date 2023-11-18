@@ -2,10 +2,12 @@
 This repository contains code and scripts to reproduce the results from S<sup>3</sup>C: Spatial Semantic Scene Coverage for Autonomous Vehicles.
 
 # Table of Contents
-* :star: <mark>PhysCov</mark>
-* :star: <mark>System vs Model-level Testing</mark>
-* :star: <mark>Considerations for Developing Scene Graph Abstractions</mark>
-* :star: <mark>Random Baseline</mark>
+* :star: PhysCov
+* :star: System vs Model-level Testing
+* :star: Considerations for Developing Scene Graph Abstractions
+* :star: Pseudocode for Approach
+* :star: Random Baseline
+* :star: Additional Training Details
 * Requirements
 * Generating Figures and Data
 * SGG Configuration Space
@@ -52,6 +54,8 @@ These tradeoffs also rise to the level of S<sup>3</sup>C's ability to discrimina
 
 Finally, even with the considerations identified above, the choice of SGG and its configuration should be validated with respect to the AV system and dataset in use to ensure compatibility and maximize the utility of S<sup>3</sup>C.
 
+# :star: Pseudocode for Approach
+
 # :star: Random Baseline
 The random baseline is computed in `carla/parse_clusters_carla.py` in the `compute_true_random` when invoked with the `carla_abstract` abstraction.
 This function takes in the maximum number of equivalence classes, `N`, that are allowed and then, for each data point, randomly chooses a number from `1` to `N` and assigns the data point to that equivalence class.
@@ -59,6 +63,10 @@ This means that the actual number of *non-empty* equivalence classes will vary b
 In Section 4.2, we use the number of *non-empty* equivalence classes; this is comparable to the SG-based approaches as <i>ASG<sub>C</sub></i> does not contain empty equivalence classes. 
 
 We compute the random baseline so that the expected number of equivalence classes range from 1 to the number of data points in increments of 100, then, when generating the figure in `carla/meta_figure_generator.py`, the system averages the data points between 0-1000 equivalence classes, 1000-2000 equivalence classes, etc. to estimate the true mean performance of the random baseline. 
+
+# :star: Additional Training Details
+We trained an AV using a PyTorch model based on ResNet34 pre-trained on ImageNet with the last layer modified for predicting a wheel steering angle from -1 to 1 which is mapped to the -70 degrees to 70 degrees of the ego vehicle, to learn to mirror the behavior of the CARLA autopilot that controlled the ego vehicle during  simulation.
+The AV steering model was trained using MSE loss, a learning rate plateau scheduler with default parameters, a maximum of 500 epochs, and an initial learning rate of 10<sup>-4</sup>.
 
 # Requirements
 This has been tested on Ubuntu 18.04 and 20.04.
@@ -148,6 +156,8 @@ The repository is divided into the following folders. See the README in each fol
   * Contains `exploratory_work.py` and precomputed data that can be used to generate right half of Table 3. Run `cd exploratory_work/ && python3 exploratory_work.py` 
 * `images/`
   * Images for this README
+* `multiframe/`
+  * Information about our initial exploration into applying S<sup>3</sup>C using multi-frame inputs.
 * `physcov/`
   * Information about the setup and comparison with PhysCov for RQ1.
 * `pipeline/`
