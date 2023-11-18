@@ -25,7 +25,7 @@ See [this README](./multiframe/README.md) in `./multiframe/` for more informatio
 
 PNFNC metrics for *ELR*, *ERS*, and Ψ<sup>*</sup><sub>10</sub> under the multi-frame based approach explored:
 
-![time_image_data](images/TIME_new_num_clusters_80_20_trivial_legend_below.svg)
+![time_image_data](images/TIME_new_num_clusters_80_20_trivial_legend_below.png)
 
 
 # :star: Considerations for Developing Scene Graph Abstractions
