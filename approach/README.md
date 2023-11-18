@@ -102,3 +102,46 @@ def efficient_clustering(sg_list: List[SG]):
         equivalence_classes.append(refined_equivalnce_classes)
     return equivalence_classes
 ```
+
+## 3.2.4 Coverage from Specification Slicing
+The final portion of S<sup>3</sup>C calculates the coverage of a specification.
+This is achieved by applying a form of model-based slicing to the graph to identify the subgraph(s) that cover portions of the specification.
+Let 𝜙 be a specification in disjunctive normal form.
+
+Note that the below algorithm relies on both a formal mechanism for specifying graph properties in DNF and a `slice` function that can use the specification to find the relevant portions of the subgraph. 
+Crafting these elements is currently a manual process for each specification examined. 
+Future work should investigate methods to generalize and automate this process.
+
+```python
+def get_specification_coverage(sg_list: List[SG], phi: DNFSpecification):
+    subgraphs_covered = []
+    for sg in sg_list:
+        # check each of the clauses of the specification
+        # we require the specification in DNF so they can be considered separately
+        for phi_clause in phi:
+            # find the relevant subgraph that satisfies this clause
+            # note that there may not be a satisfing subgraph
+            relevant_subgraph = slice(sg, phi_clause)
+            if relevant_subgraph is not None:
+                # we are only interested in the portions reachable by the ego vertex
+                # filter out any vertices that are unreachable
+                vertices_to_keep = []
+                # first find the list of vertices that are reachable
+                for vertex in relevant_subgraph:
+                    if sg.path_exists(ego, vertex):
+                        vertices_to_keep.append(vertex)
+                # then calculate the induced subgraph from the reachable vertices
+                reachable_relevant_subgraph = sg.induced_subgraph(vertices_to_keep)
+                # since the specification is in DNF then each separate clause can produce a graph
+                subgraphs_covered.append(reachable_relevant_subgraph)
+    # subgraphs_covered now contains a list of all of the relevant subgraphs for coverage
+    # however, as the scene graphs may have been mapped to the same subgraph, this list may have duplicates
+    # use clustering to de-duplicate
+    subgraph_clustering = efficient_clustering(subgraphs_covered)
+    # if only the count of coverage is desired, return len(subgraph_clustering)
+    # if the unique subgraphs are desired, build a list using one representative from each equivalence class
+    unique_subgraphs = []
+    for equivalence_class in subgraph_clustering:
+        unique_subgraphs.append(equivalence_class[0])
+    return unique_subgraphs
+```
