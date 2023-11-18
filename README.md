@@ -55,6 +55,8 @@ These tradeoffs also rise to the level of S<sup>3</sup>C's ability to discrimina
 Finally, even with the considerations identified above, the choice of SGG and its configuration should be validated with respect to the AV system and dataset in use to ensure compatibility and maximize the utility of S<sup>3</sup>C.
 
 # :star: Pseudocode for Approach
+In Section 3.2 we present several mathematical formalisms for the approach to generate, abstract, cluster, and compute coverage in the pipeline for S<sup>3</sup>C.
+The code used to perform the study is available in `/pipeline/` and [this README](/approach/README.md) contains pseudocode algorithm descriptions for each stage of the pipeline. 
 
 # :star: Random Baseline
 The random baseline is computed in `carla/parse_clusters_carla.py` in the `compute_true_random` when invoked with the `carla_abstract` abstraction.
@@ -148,6 +150,8 @@ The default parameterization uses 45 degree increments, giving each of the 4 com
 
 # Repository Structure
 The repository is divided into the following folders. See the README in each folder for more information.
+* `approach/`
+  * Contains pseudocode descriptions of the approach described in Section 3.2
 * `carla/`
   * Contains Python files and bash scripts for parsing study data from CARLA, which will be automatically run as part of `generate_figures.sh`.
 * `env.sh`
