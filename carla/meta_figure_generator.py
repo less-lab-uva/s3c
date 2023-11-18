@@ -52,14 +52,18 @@ label_map = {
     'carla_sem_rel_rss_v2_10': 'ER $\\times \\Psi_{10}$V2',
     'carla_sem_rss_v2_10': 'E $\\times \\Psi_{10}$V2',
 
-    'carla_rsv_time_2': 'Entities + Lanes + Rel $\\times$ 2 frames',
-    'carla_rsv_time_3': 'ELR[3]',
-    'carla_rsv_time_5': 'Entities + Lanes + Rel $\\times$ 5 frames',
-    'carla_rsv_time_10': 'ELR[10]',
-    'carla_abstract_time_2': 'ERS[2]',
-    'carla_abstract_time_3': 'ERS[3]',
-    'carla_abstract_time_5': 'ERS[5]',
-    'carla_abstract_time_10': 'ERS[10]',
+    'carla_rsv_time_2': '$ELR$[2]',
+    'carla_rsv_time_3': '$ELR$[3]',
+    'carla_rsv_time_5': '$ELR$[5]',
+    'carla_rsv_time_10': '$ELR$[10]',
+    'carla_abstract_time_2': '$ERS$[2]',
+    'carla_abstract_time_3': '$ERS$[3]',
+    'carla_abstract_time_5': '$ERS$[5]',
+    'carla_abstract_time_10': '$ERS$[10]',
+    'rss_v2_10_time_2': '$\\Psi_{10}^{*}[2]$ (PhysCov)',
+    'rss_v2_10_time_3': '$\\Psi_{10}^{*}[3]$ (PhysCov)',
+    'rss_v2_10_time_5': '$\\Psi_{10}^{*}[5]$ (PhysCov)',
+    'rss_v2_10_time_10': '$\\Psi_{10}^{*}[10]$ (PhysCov)',
 }
 graphs_to_show = ['carla_sem', 'carla_no_rel', 'carla_sem_rel', 'carla_rsv', 'carla_abstract',
                   'Label bin 0',
@@ -79,11 +83,15 @@ def get_color(graph_type, index):
         return 'C3'
     if 'carla_abstract' in graph_type:
         return 'C4'
+    if 'rss_v2' in graph_type:
+        return 'C7'
+    if 'Label bin 0' == graph_type:
+        return 'C5'
     # Guarantee that if it not a graph-based one then
     return f'C{(index % 5)+5}'
 
 def get_marker(graph_type):
-    if 'rss' in graph_type:
+    if 'rss' in graph_type and not 'time' in graph_type:
         return '^'
     if 'Label' in graph_type:
         return '*'
@@ -114,6 +122,12 @@ def custom_argparse(arg_string):
         required=True,
         help="Directory to save figures"
     )
+    parser.add_argument(
+        "-time",
+        "--time",
+        action='store_true',
+        help="Whether to only save the timing data"
+    )
     return parser.parse_args(arg_string)
 
 
@@ -139,6 +153,20 @@ def normalize_random(clusters_list, random_list, bin_size=2000):
 
 def meta_figure(arg_string):
     args = custom_argparse(arg_string)
+    if args.time:
+        graphs_to_show = ['carla_rsv',
+                          'carla_rsv_time_2',
+                          'carla_rsv_time_5',
+                          'carla_rsv_time_10',
+                          'carla_abstract',
+                          'carla_abstract_time_2',
+                          'carla_abstract_time_5',
+                          'carla_abstract_time_10',
+                          'rss_v2_10',
+                          'rss_v2_10_time_2',
+                          'rss_v2_10_time_5',
+                          'rss_v2_10_time_10',
+                         ]
     output_path = args.output_path/''
     os.makedirs(output_path, exist_ok=True)
     num_frames = None
@@ -257,149 +285,155 @@ def meta_figure(arg_string):
 
     plt.rcParams['axes.prop_cycle'] = cycler('color', matplotlib.colormaps['tab20'].colors)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(perc_failures_unseen_dict):
-        ax.scatter(num_cluster_dict[graph_type], perc_failures_unseen_dict[graph_type], color=get_color(graph_type, index), label=f'{graph_type}')
-    legend = ax.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
-    ax.set_xlabel('Number of clusters Train+Test (lower is better)')
-    ax.set_ylabel('Fraction of Failures that are Unseen (higher is better)')
-    fig.savefig(f'{output_path}/num_clusters.png', bbox_extra_artists=(legend,), bbox_inches='tight')
-    fig.savefig(f'{output_path}/num_clusters.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
-    plt.close(fig)
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(perc_failures_unseen_dict):
+            ax.scatter(num_cluster_dict[graph_type], perc_failures_unseen_dict[graph_type], color=get_color(graph_type, index), label=f'{graph_type}')
+        legend = ax.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+        ax.set_xlabel('Number of clusters Train+Test (lower is better)')
+        ax.set_ylabel('Fraction of Failures that are Unseen (higher is better)')
+        fig.savefig(f'{output_path}/num_clusters.png', bbox_extra_artists=(legend,), bbox_inches='tight')
+        fig.savefig(f'{output_path}/num_clusters.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
+        plt.close(fig)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(perc_failures_unseen_dict):
-        ax.scatter(num_cluster_dict[graph_type][eighty_index], perc_failures_unseen_dict[graph_type][eighty_index], color=get_color(graph_type, index),
-                   label=f'{graph_type}')
-    legend = ax.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
-    ax.set_xlabel('Number of clusters Train+Test (lower is better)')
-    ax.set_ylabel('Fraction of Failures that are Unseen (higher is better)')
-    fig.savefig(f'{output_path}/num_clusters_80_20.png', bbox_extra_artists=(legend,), bbox_inches='tight')
-    fig.savefig(f'{output_path}/num_clusters_80_20.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
-    plt.close(fig)
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(perc_failures_unseen_dict):
+            ax.scatter(num_cluster_dict[graph_type][eighty_index], perc_failures_unseen_dict[graph_type][eighty_index], color=get_color(graph_type, index),
+                       label=f'{graph_type}')
+        legend = ax.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+        ax.set_xlabel('Number of clusters Train+Test (lower is better)')
+        ax.set_ylabel('Fraction of Failures that are Unseen (higher is better)')
+        fig.savefig(f'{output_path}/num_clusters_80_20.png', bbox_extra_artists=(legend,), bbox_inches='tight')
+        fig.savefig(f'{output_path}/num_clusters_80_20.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
+        plt.close(fig)
 
     plt.rcParams['axes.prop_cycle'] = cycler('color', matplotlib.colors.TABLEAU_COLORS)
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        print(graph_type)
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * perc_failures_unseen_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
-    legend = ax.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
-    ax.set_xlabel('Number of clusters Train+Test')
-    ax.set_ylabel('Percentage of Failures that are not Covered')
-    fig.savefig(f'{output_path}/num_clusters_80_20_trivial.png', bbox_extra_artists=(legend,), bbox_inches='tight')
-    fig.savefig(f'{output_path}/num_clusters_80_20_trivial.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
-    plt.close(fig)
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            print(graph_type)
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * perc_failures_unseen_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
+        legend = ax.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
+        ax.set_xlabel('Number of clusters Train+Test')
+        ax.set_ylabel('Percentage of Failures that are not Covered')
+        fig.savefig(f'{output_path}/num_clusters_80_20_trivial.png', bbox_extra_artists=(legend,), bbox_inches='tight')
+        fig.savefig(f'{output_path}/num_clusters_80_20_trivial.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
+        plt.close(fig)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        print(label)
-        print('Total Clusters', num_cluster_dict[graph_type][eighty_index])
-        print(f'PFNC {100 * perc_failures_unseen_dict[graph_type][eighty_index]}%')
-        print()
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * perc_failures_unseen_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
-    ax.hlines(20, 0, num_frames, linestyles='dashed', color='k', label='Random Baseline')
-    ax.plot([0, num_frames], [0, 100], color='k', label='_nolabel_')
-    # ax.hlines(1, 0, num_frames, linestyles='dashed', color='k', label='Even')
-    legend = ax.legend()
-    ax.set_xlabel('Total Number of Equivalence Classes')
-    ax.set_ylabel('Percentage of Failures Not Covered (PFNC)')
-    # ax.set_ylabel('% fail unseen / % test unseen')
-    fig.savefig(f'{output_path}/num_clusters_80_20_trivial_inner_legend.png', bbox_extra_artists=(legend,), bbox_inches='tight')
-    fig.savefig(f'{output_path}/num_clusters_80_20_trivial_inner_legend.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
-    plt.close(fig)
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            print(label)
+            print('Total Clusters', num_cluster_dict[graph_type][eighty_index])
+            print(f'PFNC {100 * perc_failures_unseen_dict[graph_type][eighty_index]}%')
+            print()
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * perc_failures_unseen_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
+        ax.hlines(20, 0, num_frames, linestyles='dashed', color='k', label='Random Baseline')
+        ax.plot([0, num_frames], [0, 100], color='k', label='_nolabel_')
+        # ax.hlines(1, 0, num_frames, linestyles='dashed', color='k', label='Even')
+        legend = ax.legend()
+        ax.set_xlabel('Total Number of Equivalence Classes')
+        ax.set_ylabel('Percentage of Failures Not Covered (PFNC)')
+        # ax.set_ylabel('% fail unseen / % test unseen')
+        fig.savefig(f'{output_path}/num_clusters_80_20_trivial_inner_legend.png', bbox_extra_artists=(legend,), bbox_inches='tight')
+        fig.savefig(f'{output_path}/num_clusters_80_20_trivial_inner_legend.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
+        plt.close(fig)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * perc_failures_unseen_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    for nc in true_random_num_clusters:
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * perc_failures_unseen_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        for nc in true_random_num_clusters:
+            ax.scatter(nc,
+                       100 * (true_random_pfnc[nc]),
+                       color=f'r',
+                       label=f'_nolabel_',
+                       marker='4')
         ax.scatter(nc,
                    100 * (true_random_pfnc[nc]),
                    color=f'r',
-                   label=f'_nolabel_',
+                   label=f'True Random',
                    marker='4')
-    ax.scatter(nc,
-               100 * (true_random_pfnc[nc]),
-               color=f'r',
-               label=f'True Random',
-               marker='4')
-    N = np.linspace(1, 1000000, num=10000)
-    M = num_frames
-    T = 36809
-    theory_y = 100 * np.power((N - 1) / N, T)
-    theory_x = N - N * np.power((N - 1) / N, M)
-    ax.plot(theory_x, theory_y, color='k', ls='--', label='True Random')
-    sorted_label_num_clusters = sorted(list(label_pfnc.keys()))
-    # ax.plot(sorted_label_num_clusters, [label_pfnc[x] for x in sorted_label_num_clusters], color='b', ls='--', label='GT Steering Upper Bound')
-    ax.scatter(sorted_label_num_clusters, [label_pfnc[x] for x in sorted_label_num_clusters], color='b', marker='*', label='GT Steering Upper Bound')
-    ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
-    legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
-    # ax.set_xlabel('Number of clusters Train+Test (lower is better)')
-    # ax.set_ylabel('Percentage of Failures that are not Covered (higher is better)')
-    ax.set_xlabel('Number of clusters Train+Test')
-    ax.set_ylabel('Percentage of Failures that are not Covered')
-    fig.savefig(f'{output_path}/num_clusters_80_20_trivial_legend_below.png', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    fig.savefig(f'{output_path}/num_clusters_80_20_trivial_legend_below.svg', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    plt.close(fig)
+        N = np.linspace(1, 1000000, num=10000)
+        M = num_frames
+        T = 36809
+        theory_y = 100 * np.power((N - 1) / N, T)
+        theory_x = N - N * np.power((N - 1) / N, M)
+        ax.plot(theory_x, theory_y, color='k', ls='--', label='True Random')
+        sorted_label_num_clusters = sorted(list(label_pfnc.keys()))
+        # ax.plot(sorted_label_num_clusters, [label_pfnc[x] for x in sorted_label_num_clusters], color='b', ls='--', label='GT Steering Upper Bound')
+        ax.scatter(sorted_label_num_clusters, [label_pfnc[x] for x in sorted_label_num_clusters], color='b', marker='*', label='GT Steering Upper Bound')
+        ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
+        legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
+        # ax.set_xlabel('Number of clusters Train+Test (lower is better)')
+        # ax.set_ylabel('Percentage of Failures that are not Covered (higher is better)')
+        ax.set_xlabel('Number of clusters Train+Test')
+        ax.set_ylabel('Percentage of Failures that are not Covered')
+        fig.savefig(f'{output_path}/num_clusters_80_20_trivial_legend_below.png', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        fig.savefig(f'{output_path}/num_clusters_80_20_trivial_legend_below.svg', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        plt.close(fig)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * perc_tests_unseen_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    for nc in true_random_num_clusters:
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * perc_tests_unseen_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        for nc in true_random_num_clusters:
+            ax.scatter(nc,
+                       100 * (true_random_ptnc[nc]),
+                       color=f'r',
+                       label=f'_nolabel_',
+                       marker='4')
         ax.scatter(nc,
                    100 * (true_random_ptnc[nc]),
                    color=f'r',
-                   label=f'_nolabel_',
+                   label=f'True Random',
                    marker='4')
-    ax.scatter(nc,
-               100 * (true_random_ptnc[nc]),
-               color=f'r',
-               label=f'True Random',
-               marker='4')
-    N = np.linspace(1, 1000000, num=10000)
-    M = num_frames
-    T = 36809
-    theory_y = 100 * np.power((N - 1) / N, T)
-    theory_x = N - N * np.power((N - 1) / N, M)
-    ax.plot(theory_x, theory_y, color='k', ls='--', label='True Random')
-    ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
-    legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
-    ax.set_xlabel('Number of clusters Train+Test')
-    ax.set_ylabel('Percentage of Tests that are not Covered')
-    fig.savefig(f'{output_path}/ptnc.png', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    fig.savefig(f'{output_path}/ptnc.svg', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    plt.close(fig)
+        N = np.linspace(1, 1000000, num=10000)
+        M = num_frames
+        T = 36809
+        theory_y = 100 * np.power((N - 1) / N, T)
+        theory_x = N - N * np.power((N - 1) / N, M)
+        ax.plot(theory_x, theory_y, color='k', ls='--', label='True Random')
+        ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
+        legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
+        ax.set_xlabel('Number of clusters Train+Test')
+        ax.set_ylabel('Percentage of Tests that are not Covered')
+        fig.savefig(f'{output_path}/ptnc.png', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        fig.savefig(f'{output_path}/ptnc.svg', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        plt.close(fig)
 
     fig = plt.figure()
     ax = fig.gca()
@@ -415,18 +449,6 @@ def meta_figure(arg_string):
                    color=get_color(graph_type, index),
                    label=f'{label}',
                    marker=get_marker(graph_type))
-    # for singleton_random_num_clusters in singleton_random_num_cluster_dict:
-    #     ax.scatter(singleton_random_num_cluster_dict[singleton_random_num_clusters],
-    #                100 * singleton_random_perc_failures_unseen_dict[singleton_random_num_clusters],
-    #                color=f'b',
-    #                label=f'_nolabel_',
-    #                marker='1')
-    # one_key = list(singleton_random_num_cluster_dict.keys())[0]
-    # ax.scatter(singleton_random_num_cluster_dict[one_key],
-    #            100 * singleton_random_perc_failures_unseen_dict[one_key],
-    #            color=f'b',
-    #            label=f'Random Max Singletons',
-    #            marker='1')
     x, y = normalize_random(true_random_num_clusters, [100 * true_random_new_perc_failures_unseen_dict[nc] for nc in true_random_num_clusters])
     # ax.plot(x, y, color='k', ls='--', label='Random Clustering')
     ax.scatter(x, y, color='k', marker='4', label='Random Clustering')
@@ -434,212 +456,137 @@ def meta_figure(arg_string):
     ax.set_xlabel('Number of Equivalence Classes Train+Test')
     ax.set_ylabel('Percentage of Novel Failures Not Covered (PNFNC)')
     legend = ax.legend(loc='lower right')
-    fig.savefig(f'{output_path}/new_num_clusters_80_20_trivial_legend_within.png', bbox_extra_artists=(legend,),
+    fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_within.png', bbox_extra_artists=(legend,),
                 bbox_inches='tight')
-    fig.savefig(f'{output_path}/new_num_clusters_80_20_trivial_legend_within.svg', bbox_extra_artists=(legend,),
+    fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_within.svg', bbox_extra_artists=(legend,),
                 bbox_inches='tight')
     legend = ax.legend(bbox_to_anchor=(0.5, -.1), loc='upper center', ncols=2)
-    fig.savefig(f'{output_path}/new_num_clusters_80_20_trivial_legend_below.png', bbox_extra_artists=(legend,),
+    fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_below.png', bbox_extra_artists=(legend,),
                 bbox_inches='tight')
-    fig.savefig(f'{output_path}/new_num_clusters_80_20_trivial_legend_below.svg', bbox_extra_artists=(legend,),
+    fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_below.svg', bbox_extra_artists=(legend,),
                 bbox_inches='tight')
     plt.close(fig)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        if graph_type not in new_perc_fail_classes_unseen_dict:
-            continue
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * new_perc_fail_classes_unseen_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    # for singleton_random_num_clusters in singleton_random_num_cluster_dict:
-    #     ax.scatter(singleton_random_num_cluster_dict[singleton_random_num_clusters],
-    #                100 * singleton_random_perc_failures_unseen_dict[singleton_random_num_clusters],
-    #                color=f'b',
-    #                label=f'_nolabel_',
-    #                marker='1')
-    # one_key = list(singleton_random_num_cluster_dict.keys())[0]
-    # ax.scatter(singleton_random_num_cluster_dict[one_key],
-    #            100 * singleton_random_perc_failures_unseen_dict[one_key],
-    #            color=f'b',
-    #            label=f'Random Max Singletons',
-    #            marker='1')
-    x, y = normalize_random(true_random_num_clusters,
-                            [100 * true_random_new_perc_fail_classes_unseen_dict[nc] for nc in true_random_num_clusters])
-    # ax.plot(x, y, color='k', ls='--', label='Random Clustering')
-    ax.scatter(x, y, color='k', marker='4', label='Random Clustering')
-    # for nc in true_random_num_clusters:
-    #     ax.scatter(nc,
-    #                100 * (true_random_new_perc_fail_classes_unseen_dict[nc]),
-    #                color=f'r',
-    #                label=f'_nolabel_',
-    #                marker='4')
-    # ax.scatter(nc,
-    #            100 * (true_random_new_perc_fail_classes_unseen_dict[nc]),
-    #            color=f'r',
-    #            label=f'True Random',
-    #            marker='4')
-    # N = np.linspace(1, 1000000, num=10000)
-    # M = num_frames
-    # T = 36809
-    # theory_y = 100 * np.power((N - 1) / N, T)
-    # theory_x = N - N * np.power((N - 1) / N, M)
-    # ax.plot(theory_x, theory_y, color='k', ls='--', label='True Random')
-    # # ax.hlines(20, 0, num_frames, linestyles='dashed', color='k', label='Random Baseline')
-    # # ax.plot([0, num_frames], [0, 100], color='k', label='_nolabel_')
-    # for random_num_clusters in random_num_cluster_dict:
-    #     ax.scatter(random_num_cluster_dict[random_num_clusters],
-    #                100 * random_perc_failures_unseen_dict[random_num_clusters],
-    #                color=f'k',
-    #                label=f'_nolabel_',
-    #                marker='2')
-    # one_key = list(random_num_cluster_dict.keys())[0]
-    # ax.scatter(random_num_cluster_dict[one_key],
-    #            100 * random_perc_failures_unseen_dict[one_key],
-    #            color=f'k',
-    #            label=f'Uniform Random Baseline',
-    #            marker='2')
-    ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
-    # sorted_label_num_clusters = sorted(list(label_pnfcnc.keys()))
-    # ax.plot(sorted_label_num_clusters, [label_pnfcnc_upper[x] for x in sorted_label_num_clusters], color='b', ls='--',label='GT Steering Upper Bound')
-    legend = ax.legend(bbox_to_anchor=(0.5, -.1), loc='upper center', ncols=2)
-    # ax.set_xlabel('Number of clusters Train+Test (lower is better)')
-    # ax.set_ylabel('Percentage of Failures that are not Covered (higher is better)')
-    ax.set_xlabel('Number of Equivalence Classes Train+Test')
-    ax.set_ylabel('Percentage of Novel Failure Classes that are not Covered')
-    fig.savefig(f'{output_path}/new_classes_num_clusters_80_20_trivial_legend_below.png', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    fig.savefig(f'{output_path}/new_classes_num_clusters_80_20_trivial_legend_below.svg', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    plt.close(fig)
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            if graph_type not in new_perc_fail_classes_unseen_dict:
+                continue
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * new_perc_fail_classes_unseen_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        x, y = normalize_random(true_random_num_clusters,
+                                [100 * true_random_new_perc_fail_classes_unseen_dict[nc] for nc in true_random_num_clusters])
+        ax.scatter(x, y, color='k', marker='4', label='Random Clustering')
+        ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
+        legend = ax.legend(bbox_to_anchor=(0.5, -.1), loc='upper center', ncols=2)
+        ax.set_xlabel('Number of Equivalence Classes Train+Test')
+        ax.set_ylabel('Percentage of Novel Failure Classes that are not Covered')
+        fig.savefig(f'{output_path}/new_classes_num_clusters_80_20_trivial_legend_below.png', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        fig.savefig(f'{output_path}/new_classes_num_clusters_80_20_trivial_legend_below.svg', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        plt.close(fig)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        if graph_type not in perc_consistent_class_dict:
-            continue
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * perc_consistent_class_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    for nc in true_random_num_clusters:
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            if graph_type not in perc_consistent_class_dict:
+                continue
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * perc_consistent_class_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        for nc in true_random_num_clusters:
+            ax.scatter(nc,
+                       100 * (true_random_perc_consistent_class_dict[nc]),
+                       color=f'r',
+                       label=f'_nolabel_',
+                       marker='4')
         ax.scatter(nc,
                    100 * (true_random_perc_consistent_class_dict[nc]),
                    color=f'r',
-                   label=f'_nolabel_',
+                   label=f'True Random',
                    marker='4')
-    ax.scatter(nc,
-               100 * (true_random_perc_consistent_class_dict[nc]),
-               color=f'r',
-               label=f'True Random',
-               marker='4')
-    legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
-    ax.set_xlabel('Number of clusters Train+Test')
-    ax.set_ylabel('% of Non-Singleton Classes Consistent (higher better)')
-    fig.savefig(f'{output_path}/perc_non_singleton_consistent_legend_below.png', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    fig.savefig(f'{output_path}/perc_non_singleton_consistent_legend_below.svg', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    plt.close(fig)
+        legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
+        ax.set_xlabel('Number of clusters Train+Test')
+        ax.set_ylabel('% of Non-Singleton Classes Consistent (higher better)')
+        fig.savefig(f'{output_path}/perc_non_singleton_consistent_legend_below.png', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        fig.savefig(f'{output_path}/perc_non_singleton_consistent_legend_below.svg', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        plt.close(fig)
 
-    # fig = plt.figure()
-    # ax = fig.gca()
-    # for index, graph_type in enumerate(graphs_to_show):
-    #     label = label_map[graph_type] if graph_type in label_map else graph_type
-    #     if graph_type not in perc_consistent_class_dict:
-    #         continue
-    #     ax.scatter(num_cluster_dict[graph_type][eighty_index],
-    #                np.log(perc_consistent_class_dict[graph_type][eighty_index]),
-    #                color=get_color(graph_type, index),
-    #                label=f'{label}',
-    #                marker=get_marker(graph_type))
-    # for nc in true_random_num_clusters:
-    #     ax.scatter(nc,
-    #                np.log(true_random_perc_consistent_class_dict[nc]),
-    #                color=f'r',
-    #                label=f'_nolabel_',
-    #                marker='4')
-    # ax.scatter(nc,
-    #            np.log(true_random_perc_consistent_class_dict[nc]),
-    #            color=f'r',
-    #            label=f'True Random',
-    #            marker='4')
-    # legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
-    # ax.set_xlabel('Number of clusters Train+Test')
-    # ax.set_ylabel('LOG % of Non-Singleton Classes Consistent (higher better)')
-    # fig.savefig(f'{output_path}/log_perc_non_singleton_consistent_legend_below.png', bbox_extra_artists=(legend,),
-    #             bbox_inches='tight')
-    # fig.savefig(f'{output_path}/log_perc_non_singleton_consistent_legend_below.svg', bbox_extra_artists=(legend,),
-    #             bbox_inches='tight')
-    # plt.close(fig)
-
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        if graph_type not in perc_possible_inconsistent_class_dict:
-            continue
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * perc_possible_inconsistent_class_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    for nc in true_random_num_clusters:
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            if graph_type not in perc_possible_inconsistent_class_dict:
+                continue
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * perc_possible_inconsistent_class_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        for nc in true_random_num_clusters:
+            ax.scatter(nc,
+                       100 * (true_random_perc_possible_inconsistent_class_dict[nc]),
+                       color=f'r',
+                       label=f'_nolabel_',
+                       marker='4')
         ax.scatter(nc,
                    100 * (true_random_perc_possible_inconsistent_class_dict[nc]),
                    color=f'r',
-                   label=f'_nolabel_',
+                   label=f'True Random',
                    marker='4')
-    ax.scatter(nc,
-               100 * (true_random_perc_possible_inconsistent_class_dict[nc]),
-               color=f'r',
-               label=f'True Random',
-               marker='4')
-    legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
-    ax.set_xlabel('Number of clusters Train+Test')
-    ax.set_ylabel('Percentage of Possible Inconsistent Classes (lower better)')
-    fig.savefig(f'{output_path}/perc_possible_inconsistent_legend_below.png', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    fig.savefig(f'{output_path}/perc_possible_inconsistent_legend_below.svg', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    plt.close(fig)
+        legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
+        ax.set_xlabel('Number of clusters Train+Test')
+        ax.set_ylabel('Percentage of Possible Inconsistent Classes (lower better)')
+        fig.savefig(f'{output_path}/perc_possible_inconsistent_legend_below.png', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        fig.savefig(f'{output_path}/perc_possible_inconsistent_legend_below.svg', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        plt.close(fig)
 
-    fig = plt.figure()
-    ax = fig.gca()
-    for index, graph_type in enumerate(graphs_to_show):
-        label = label_map[graph_type] if graph_type in label_map else graph_type
-        if graph_type not in perc_classes_with_failures_that_are_consistent_class_dict:
-            continue
-        ax.scatter(num_cluster_dict[graph_type][eighty_index],
-                   100 * perc_classes_with_failures_that_are_consistent_class_dict[graph_type][eighty_index],
-                   color=get_color(graph_type, index),
-                   label=f'{label}',
-                   marker=get_marker(graph_type))
-    for nc in true_random_num_clusters:
+    if not args.time:
+        fig = plt.figure()
+        ax = fig.gca()
+        for index, graph_type in enumerate(graphs_to_show):
+            label = label_map[graph_type] if graph_type in label_map else graph_type
+            if graph_type not in perc_classes_with_failures_that_are_consistent_class_dict:
+                continue
+            ax.scatter(num_cluster_dict[graph_type][eighty_index],
+                       100 * perc_classes_with_failures_that_are_consistent_class_dict[graph_type][eighty_index],
+                       color=get_color(graph_type, index),
+                       label=f'{label}',
+                       marker=get_marker(graph_type))
+        for nc in true_random_num_clusters:
+            ax.scatter(nc,
+                       100 * (true_random_perc_classes_with_failures_that_are_consistent_class_dict[nc]),
+                       color=f'r',
+                       label=f'_nolabel_',
+                       marker='4')
         ax.scatter(nc,
                    100 * (true_random_perc_classes_with_failures_that_are_consistent_class_dict[nc]),
                    color=f'r',
-                   label=f'_nolabel_',
+                   label=f'True Random',
                    marker='4')
-    ax.scatter(nc,
-               100 * (true_random_perc_classes_with_failures_that_are_consistent_class_dict[nc]),
-               color=f'r',
-               label=f'True Random',
-               marker='4')
-    legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
-    ax.set_xlabel('Number of clusters Train+Test')
-    ax.set_ylabel('% of classes with failures that are consistent (higher is better)')
-    fig.savefig(f'{output_path}/perc_failure_classes_consistent.png', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    fig.savefig(f'{output_path}/perc_failure_classes_consistent.svg', bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-    plt.close(fig)
+        legend = ax.legend(bbox_to_anchor=(0, -.1), loc='upper left', ncols=2)
+        ax.set_xlabel('Number of clusters Train+Test')
+        ax.set_ylabel('% of classes with failures that are consistent (higher is better)')
+        fig.savefig(f'{output_path}/perc_failure_classes_consistent.png', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        fig.savefig(f'{output_path}/perc_failure_classes_consistent.svg', bbox_extra_artists=(legend,),
+                    bbox_inches='tight')
+        plt.close(fig)
 
 if __name__ == '__main__':
     meta_figure(sys.argv[1:])

@@ -13,10 +13,18 @@ This repository contains code and scripts to reproduce the results from S<sup>3<
 
 
 # :star: PhysCov
-We compare against [PhysCov](https://github.com/hildebrandt-carl/PhysicalCoverage) as a baseline in Section 4.2. See [the README](./physcov/README.md) in `./physcov/` for more information.
+We compare against [PhysCov](https://github.com/hildebrandt-carl/PhysicalCoverage) as a baseline in Section 4.2. See [this README](./physcov/README.md) in `./physcov/` for more information.
 
 
 # :star: System vs Model-level Testing
+As discussed in Section 4.4, our initial exploration has focused only on model-level testing single-instant camera image inputs which may not generalize to system-level failures and multi-frame inputs. 
+Here, we provide an initial exploration of extending S<sup>3</sup>C to multi-frame inputs.
+See [this README](./multiframe/README.md) in `./multiframe/` for more information.
+
+PNFNC metrics for *ELR*, *ERS*, and Ψ<sup>*</sup><sub>10</sub> under the multi-frame based approach explored:
+
+![time_image_data](images/TIME_new_num_clusters_80_20_trivial_legend_below.svg)
+
 
 # :star: Considerations for Developing Scene Graph Abstractions
 When configuring S<sup>3</sup>3, the choice and configuration of the SGG and scene graph abstraction are critically important as they foundationally affect the performance of the approach. 
