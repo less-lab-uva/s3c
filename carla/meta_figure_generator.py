@@ -151,7 +151,7 @@ def normalize_random(clusters_list, random_list, bin_size=2000):
     return x, y
 
 
-def meta_figure(arg_string):
+def meta_figure(arg_string, graphs_to_show=graphs_to_show):
     args = custom_argparse(arg_string)
     if args.time:
         graphs_to_show = ['carla_rsv',
@@ -217,7 +217,7 @@ def meta_figure(arg_string):
                 # perc_failures_unseen_dict[graph_type].append(1e-2*(1-seen_stats['fail_perc'][0]) / (1-seen_stats['seen_perc'][0]) if (1-seen_stats['seen_perc'][0]) > 0 else 0)
                 if x_index == len(total_mse_list):
                     total_mse_list.append(seen_stats['total_mse'].values[0])
-            except:
+            except Exception as e:
                 print(f'error on {graph_type}')
                 pass
         label_file = f'{folder}carla_abstract/label_groups.csv'

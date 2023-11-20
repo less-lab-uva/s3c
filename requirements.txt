@@ -8,3 +8,4 @@ pandas==1.3.5
 opencv-python==4.7.0.72
 tqdm==4.62.3
 scikit-learn==1.3.0
+venn==0.1.3

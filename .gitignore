@@ -132,6 +132,7 @@ sg2vec/scripts/wandb/*
 
 # Custom
 .idea
+.vscode
 sg/
 study_data/figures/
 study_data/results/
