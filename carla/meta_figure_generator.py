@@ -354,6 +354,7 @@ def meta_figure(arg_string):
         # ax.set_ylabel('% fail unseen / % test unseen')
         fig.savefig(f'{output_path}/num_clusters_80_20_trivial_inner_legend.png', bbox_extra_artists=(legend,), bbox_inches='tight')
         fig.savefig(f'{output_path}/num_clusters_80_20_trivial_inner_legend.svg', bbox_extra_artists=(legend,), bbox_inches='tight')
+        fig.savefig(f'{output_path}/num_clusters_80_20_trivial_inner_legend.pdf', format="pdf", bbox_extra_artists=(legend,), bbox_inches='tight')
         plt.close(fig)
 
     if not args.time:

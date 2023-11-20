@@ -102,7 +102,7 @@ def cluster_figure_generator(arg_string):
         fig.suptitle(f'{label_map[graph_type]} Equivalence Class Partitions')  # , fontsize=16
         fig.savefig(f'{output_path}/cluster_viz_{graph_type}.png', bbox_inches='tight')
         fig.savefig(f'{output_path}/cluster_viz_{graph_type}.svg', bbox_inches='tight')
-        fig.savefig(f'{output_path}/cluster_viz_{graph_type}.pdf', bbox_inches='tight')
+        fig.savefig(f'{output_path}/cluster_viz_{graph_type}.pdf', format="pdf", bbox_inches='tight')
         plt.close(fig)
 
     fig = plt.figure()
