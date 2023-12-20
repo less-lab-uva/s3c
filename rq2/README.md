@@ -18,7 +18,7 @@ The folder is organized as follows:
     * Run as part of `study_data/generate_figures.py`, this generates the precondition coverage information found in Table 2.
 
 ## Table
-The data to fill the table is obtained by executing `rq2b.py`. The table is shown below for convenience. Note that in our paper, there was a typo in the table. The correct value for precondition 5 coverage of Town04 is 149 (34.98%), not 147 (34.51%).
+The data to fill the table is obtained by executing `rq2b.py`. The table is shown below for convenience.
 
 | Preconditions | \|A\| | Town01     | Town02     | Town04        | Town10HD    | All          |
 |---------------|-------|------------|------------|---------------|-------------|--------------|
@@ -26,4 +26,4 @@ The data to fill the table is obtained by executing `rq2b.py`. The table is show
 | 2             | 31    | 0 (0.0%)   | 0 (0.0%)   | 24 (77.42%)   | 23 (74.19%) | 26 (83.87%)  |
 | 3             | 24    | 0 (0.0%)   | 0 (0.0%)   | 0 (0.0%)      | 0 (0.0%)    | 0 (0.0%)     |
 | 4             | 22    | 4 (18.18%) | 4 (18.18%) | 22 (100.0%)   | 10 (45.45%) | 22 (100.0%)  |
-| 5             | 426   | 3 (0.7%)   | 3 (0.7%)   | **149 (34.98%)*** | 16 (3.76%)  | 163 (38.26%) |
+| 5             | 426   | 3 (0.7%)   | 3 (0.7%)   | 149 (34.98%)  | 16 (3.76%)  | 163 (38.26%) |

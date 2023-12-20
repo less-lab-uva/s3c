@@ -17,3 +17,6 @@ echo "Generating RQ2-A data"
 python3 rq2/a/rq2a.py
 echo "Generating RQ2-B data"
 python3 rq2/b/rq2b.py
+cd exploratory_work
+python3 exploratory_work.py
+cd ../

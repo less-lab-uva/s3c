@@ -13,3 +13,11 @@ The script must be run from within this folder:
 cd s3c/exploratory_work
 python3 exploratory_work.py
 ```
+
+If you installed docker, you can run the following command instead:
+
+```bash
+docker run -it --rm -v ./:/s3c s3c /bin/bash
+cd exploratory_work
+python3 exploratory_work.py
+```

@@ -14,6 +14,12 @@ source env.sh
 source study_data/full_study/full_study.sh
 # the system will run for 2-3 hours, printing progress as it runs.
 ```
+If you installed docker, you can run the following command instead:
+
+```bash
+docker run -it --rm -v ./:/s3c s3c /bin/bash
+source study_data/full_study/full_study.sh
+```
 
 ## Files Downloaded
 The system will download the following raw data
