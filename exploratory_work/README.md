@@ -2,6 +2,8 @@
 This folder contains scripts for the exploratory work and is organized as follows:
 * `dataset_csv/`
   * Contains a CSV file for each of the open-source datasets explored. Each CSV contains a decomposition of the graph used to generate the statistics shown in the right half of Table 3.
+* `clusters/`
+  * Contains the SG clusters for each of the open-source datasets explored. Each json file contains all the SG classes generated.
 * `exploratory_work.py`
   * Consumes the CSV files from `dataset_csv/` to generate the right half of Table 3.
 * `rs2v_times.ipynb`
