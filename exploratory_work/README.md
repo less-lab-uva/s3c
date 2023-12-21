@@ -17,7 +17,7 @@ python3 exploratory_work.py
 If you installed docker, you can run the following command instead:
 
 ```bash
-docker run -it -u `stat -c "%u:%g" $(pwd)` --rm -v $(pwd)/:/s3c s3c /bin/bash
+docker run -it --rm -v $(pwd)/:/s3c s3c /bin/bash
 cd exploratory_work
 python3 exploratory_work.py
 ```

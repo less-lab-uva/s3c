@@ -33,7 +33,7 @@ else
   wget https://zenodo.org/record/8250740/files/Town04_max_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town10HD_max_car (6.7 GB)\n" && \
   wget https://zenodo.org/record/8250740/files/Town10HD_max_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
-  touch .zenodo && printf "Finished at $(date)\n"
+  touch .zenodo && printf "Finished at $(date)\n" && chown -R 1000:1000 .
 fi
 if test -f ".zenodo" ; then
   printf "Generating the clusterings and saving to carla_clusters/\n"

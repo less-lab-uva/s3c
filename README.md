@@ -28,7 +28,7 @@ If you prefer, you could also reproduce our study using docker. In order to do t
   docker build -t s3c .
   ```
 
-Note: The scripts have been tested with docker version 24.0.6.
+Note: The scripts have been tested with docker versions 20.10.17 and 24.0.6.
 
 
 # Generating Figures and Data
@@ -47,7 +47,7 @@ source study_data/generate_figures.sh
 If you installed docker, you can run the following command instead:
 
 ```bash
-docker run -it -u `stat -c "%u:%g" $(pwd)` --rm -v $(pwd)/:/s3c s3c /bin/bash
+docker run -it --rm -v $(pwd)/:/s3c s3c /bin/bash
 source study_data/generate_figures.sh
 ```
 
