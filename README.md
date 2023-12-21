@@ -47,7 +47,7 @@ source study_data/generate_figures.sh
 If you installed docker, you can run the following command instead:
 
 ```bash
-docker run -it --rm -v ./:/s3c s3c /bin/bash
+docker run -it -u `stat -c "%u:%g" $(pwd)` --rm -v $(pwd)/:/s3c s3c /bin/bash
 source study_data/generate_figures.sh
 ```
 

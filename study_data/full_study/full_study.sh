@@ -18,21 +18,21 @@ else
   printf "This will take a very long time (~1.5 hours in testing with high variability).\n"
   printf "Started at $(date)\n"
   printf "Downloading Town01_zero_car (4.3 GB)\n" && \
-  curl https://zenodo.org/record/8271428/files/Town01_zero_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8271428/files/Town01_zero_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town02_zero_car (3.7 GB)\n" && \
-  curl https://zenodo.org/record/8271428/files/Town02_zero_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8271428/files/Town02_zero_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town04_zero_car (12.0 GB)\n" && \
-  curl https://zenodo.org/record/8271428/files/Town04_zero_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8271428/files/Town04_zero_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town10HD_zero_car (5.2 GB)\n" && \
-  curl https://zenodo.org/record/8271428/files/Town10HD_zero_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8271428/files/Town10HD_zero_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town01_max_car (6.8 GB)\n" && \
-  curl https://zenodo.org/record/8250740/files/Town01_max_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8250740/files/Town01_max_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town02_max_car (4.7 GB)\n" && \
-  curl https://zenodo.org/record/8250740/files/Town02_max_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8250740/files/Town02_max_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town04_max_car (17.8 GB)\n" && \
-  curl https://zenodo.org/record/8250740/files/Town04_max_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8250740/files/Town04_max_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   printf "Downloading Town10HD_max_car (6.7 GB)\n" && \
-  curl https://zenodo.org/record/8250740/files/Town10HD_max_car.tar.gz?download=1 | tar xz -C full_study_data && \
+  wget https://zenodo.org/record/8250740/files/Town10HD_max_car.tar.gz?download=1 -O - | tar xz -C full_study_data && \
   touch .zenodo && printf "Finished at $(date)\n"
 fi
 if test -f ".zenodo" ; then
