@@ -145,3 +145,4 @@ rq2/a/splits_csv/
 rq2/b/carla_csv/
 study_data/physcov_clusters/
 *_time_*.json
+exploratory_work/clusters/
