@@ -1,7 +1,7 @@
 # Multi-frame inputs
 As discussed in Section 4.4, our initial exploration has focused only on model-level testing single-instant camera image inputs which may not generalize to system-level failures and multi-frame inputs. 
 Here, we provide an initial exploration of extending S<sup>3</sup>C to multi-frame inputs.
-As described in Section 4, the data used in the study game from executing 15 tests of 5 minutes each across 4 CARLA Towns under the two different test treatments: zero cars or max cars.
+As described in Section 4, the data used in the study came from executing 15 tests of 5 minutes each across 4 CARLA Towns under the two different test treatments: zero cars or max cars.
 Within each 5 minute test, we obtained all of the relevant inputs at 5Hz.
 Although the main evaluation in Section 4 does not consider any relationship between the resulting data, we can leverage the temporal information to provide an initial analysis of how incorporating the time domain affects S<sup>3</sup>C's performance.
 
