@@ -78,11 +78,52 @@ if test -f ".zenodo" ; then
     done
   done
   wait
+  echo "Parsing PhysCov comparison data for RQ1"
+  # PhysCov data is not recomputed from scratch as it does not use the graph framework
+  export PHYSCOV_DIR=study_data/physcov/
+  export PHYSCOV_CLUSTER_DIR=study_data/physcov_clusters/
+  python3 carla/parse_physcov.py -input ${PHYSCOV_DIR} -output ${PHYSCOV_CLUSTER_DIR}
+  echo "Generating time sequence data"
+  source carla/gen_time_sequence.sh ${CLUSTER_DIR}/ ${PHYSCOV_CLUSTER_DIR}/
+  # Parse time sequence and physcov data
+  for results in "0.8_percent_e386"
+  do
+    for dataset in "rss_10"
+    do
+      save_dir="${OUTER_SAVE_FILE}${results}/${dataset}/"
+      echo "${save_dir}"
+      mkdir -p "${save_dir}"
+      python3 carla/parse_clusters_carla.py -dsf ${PHYSCOV_CLUSTER_DIR}/${dataset}.json -test "${MODEL_RESULTS_DIR}/${results}_results.csv" -o "${save_dir}"
+    done
+    for dataset in "rss_v2_10"
+    do
+      save_dir="${OUTER_SAVE_FILE}${results}/${dataset}/"
+      echo "${save_dir}"
+      mkdir -p "${save_dir}"
+      python3 carla/parse_clusters_carla.py -dsf ${PHYSCOV_CLUSTER_DIR}/${dataset}.json -test "${MODEL_RESULTS_DIR}/${results}_results.csv" -o "${save_dir}"
+    done
+    for dataset in "carla_rsv_time_2" "carla_rsv_time_3" "carla_rsv_time_5" "carla_rsv_time_10" "carla_abstract_time_2" "carla_abstract_time_3" "carla_abstract_time_5" "carla_abstract_time_10"
+    do
+      save_dir="${OUTER_SAVE_FILE}${results}/${dataset}/"
+      echo "${save_dir}"
+      mkdir -p "${save_dir}"
+      python3 carla/parse_clusters_carla.py -dsf ${CLUSTER_DIR}/${dataset}.json -test "${MODEL_RESULTS_DIR}/${results}_results.csv" -o "${save_dir}"
+    done
+    for dataset in "rss_v2_10_time_2" "rss_v2_10_time_3" "rss_v2_10_time_5" "rss_v2_10_time_10"
+    do
+      save_dir="${OUTER_SAVE_FILE}${results}/${dataset}/"
+      echo "${save_dir}"
+      mkdir -p "${save_dir}"
+      python3 carla/parse_clusters_carla.py -dsf ${PHYSCOV_CLUSTER_DIR}/${dataset}.json -test "${MODEL_RESULTS_DIR}/${results}_results.csv" -o "${save_dir}"
+    done
+  done
   echo "Finished parsing data at $(date)"
   echo "Generating figures for Approach"
   python3 carla/cluster_figure_generator.py -i ${CLUSTER_DIR}/ -o ${FIGURE_DIR}
   echo "Generating figures for RQ1"
   python3 carla/meta_figure_generator.py -i ${OUTER_SAVE_FILE}/ -o ${FIGURE_DIR}
+  echo "Generating figures for Approach based on time data"
+  python3 carla/meta_figure_generator.py -i ${OUTER_SAVE_FILE}/ -o ${FIGURE_DIR} --time
 
   echo "Creating CSV files for RQ2-A"
   python3 rq2/a/create_csv_for_rq2a.py

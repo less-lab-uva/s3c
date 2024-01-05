@@ -1,7 +1,14 @@
 cd $(dirname ${BASH_SOURCE})/..
 source env.sh
-export CARLA_CLUSTER_DIR=study_data/carla_clusters/
-export PHYSCOV_CLUSTER_DIR=study_data/physcov_clusters/
+if [ -z "$1" ]
+  then
+    # if no args are passed, default to the expected ones for general replication
+    export CARLA_CLUSTER_DIR=study_data/carla_clusters/
+    export PHYSCOV_CLUSTER_DIR=study_data/physcov_clusters/
+else
+    export CARLA_CLUSTER_DIR=$1
+    export PHYSCOV_CLUSTER_DIR=$2
+fi
 
 for time in "2" "3" "5" "10"
 do
