@@ -40,6 +40,10 @@ def get_distribution_of(df, entity):
 ############
 
 def main():
+    pd.set_option('display.max_rows', 500)
+    pd.set_option('display.max_columns', 500)
+    pd.set_option('display.width', 150)
+    
     # Load csv files
     cityscapes_df = pd.read_csv("./dataset_csv/Cityscapes.csv")
     udacity_df = pd.read_csv("./dataset_csv/Udacity.csv")

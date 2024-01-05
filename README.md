@@ -18,7 +18,7 @@ This repository contains code and scripts to reproduce the results from S<sup>3<
 
 
 # Requirements
-This has been tested on Ubuntu 18.04 and 20.04.
+This has been tested on Ubuntu 18.04 and 20.04 for both direct execution and Docker, and has been tested on Windows 11 in Docker.
 The code uses anaconda and Python 3.9, which must be installed on the host system.
 Running `source env.sh` (which is done automatically by the below scripts), will set up a conda environment called `sg` and install all Python requirements.
 
@@ -28,7 +28,7 @@ If you prefer, you could also reproduce our study using docker. In order to do t
   docker build -t s3c .
   ```
 
-Note: The scripts have been tested with docker versions 20.10.17 and 24.0.6.
+Note: The scripts have been tested with docker versions 20.10.17 and 24.0.6 for Ubuntu, and 24.0.7 for Windows.
 
 
 # Generating Figures and Data
@@ -44,7 +44,7 @@ source env.sh
 source study_data/generate_figures.sh
 ```
 
-If you installed docker, you can run the following command instead:
+If you installed docker, you can run the following command instead. Note: On Windows, replace `$(pwd)` with the local file path of the `s3c` directory.
 
 ```bash
 docker run -it --rm -v $(pwd)/:/s3c s3c /bin/bash
