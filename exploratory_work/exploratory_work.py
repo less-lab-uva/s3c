@@ -1,3 +1,5 @@
+import os
+import json
 import pandas as pd
 
 
@@ -67,8 +69,40 @@ def main():
                               'bus': f"{row['bus'][0]:.2f} $\pm$ {row['bus'][1]:.2f} &",
                               'car': f"{row['car'][0]:.2f} $\pm$ {row['car'][1]:.2f}"
                               }, ignore_index=True)
-
+    print('=== Right Half of Table 3 ===')
     print(table)
+
+    if os.path.exists(".clusters_unpacked"):
+        dataset_names = ['CommaAi', 'Nuscenes', 'Sully', 'Udacity', 'Cityscapes', 'Union']
+        datasets = {}
+        for dataset_name in dataset_names:
+            with open(f'clusters/{dataset_name}.json') as f:
+                datasets[dataset_name] = json.load(f)
+
+        union = datasets['Union']
+        all_images = set()
+        union_map = {}
+        for dataset_name in dataset_names:
+            if dataset_name == 'Union':
+                continue
+            all_images.update(datasets[dataset_name]['image_files'])
+            union_map.update({image: dataset_name for image in datasets[dataset_name]['image_files']})
+        asg_table = pd.DataFrame(columns=['dataset', 'Images', 'Images %', '$|ASG_C|$', '$|ASG_C| %$', '$|Img|/|ASG_C|$'])
+        for dataset_name in dataset_names:
+            dataset = datasets[dataset_name]
+            asg_table = asg_table.append({'dataset': dataset_name,
+                                          'Images': f"{len(dataset['image_files'])} &",
+                                          'Images %': f"{100*len(dataset['image_files']) / len(union['image_files']):0.0f}\\% &",
+                                          '$|ASG_C|$': f"{len(dataset['clusters'])} &",
+                                          '$|ASG_C| %$': f"{100*len(dataset['clusters']) / len(union['clusters']):0.0f}\\% &",
+                                          '$|Img|/|ASG_C|$': f"{len(dataset['image_files']) / len(dataset['clusters']):0.2f}"
+                                          }, ignore_index=True)
+        print()
+        print('=== Left Half of Table 3 ===')
+        print(asg_table)
+    else:
+        print('It appears that the cluster data has not been unpacked.')
+        print('Please run unpack_exploratory_work.sh and then re-run this script.')
 
 
 if __name__ == '__main__':
