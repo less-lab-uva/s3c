@@ -18,8 +18,8 @@ This repository contains code and scripts to reproduce the results from S<sup>3<
 
 
 # Requirements
-This has been tested on Ubuntu 18.04 and 20.04 for both direct execution and Docker, and has been tested on Windows 11 in Docker.
-The code uses anaconda and Python 3.9, which must be installed on the host system.
+This has been tested on ${\color{red}\text{Ubuntu 18.04 and 20.04}}$ for both direct execution and Docker, and has been tested on Windows 11 in Docker.
+The code uses ${\color{red}\text{anaconda and Python 3.9}}$, which must be installed on the host system if running outside of Docker.
 Running `source env.sh` (which is done automatically by the below scripts), will set up a conda environment called `sg` and install all Python requirements.
 
 If you prefer, you could also reproduce our study using docker. In order to do that, you will need to have docker installed in your machine, and execute the following command:
