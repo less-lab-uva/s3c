@@ -52,18 +52,18 @@ label_map = {
     'carla_sem_rel_rss_v2_10': 'ER $\\times \\Psi_{10}$V2',
     'carla_sem_rss_v2_10': 'E $\\times \\Psi_{10}$V2',
 
-    'carla_rsv_time_2': '$ELR$[2]',
-    'carla_rsv_time_3': '$ELR$[3]',
-    'carla_rsv_time_5': '$ELR$[5]',
-    'carla_rsv_time_10': '$ELR$[10]',
-    'carla_abstract_time_2': '$ERS$[2]',
-    'carla_abstract_time_3': '$ERS$[3]',
-    'carla_abstract_time_5': '$ERS$[5]',
-    'carla_abstract_time_10': '$ERS$[10]',
-    'rss_v2_10_time_2': '$\\Psi_{10}^{*}[2]$ (PhysCov)',
-    'rss_v2_10_time_3': '$\\Psi_{10}^{*}[3]$ (PhysCov)',
-    'rss_v2_10_time_5': '$\\Psi_{10}^{*}[5]$ (PhysCov)',
-    'rss_v2_10_time_10': '$\\Psi_{10}^{*}[10]$ (PhysCov)',
+    'carla_rsv_time_2': '$ELR\\langle2\\rangle$',
+    'carla_rsv_time_3': '$ELR\\langle3\\rangle$',
+    'carla_rsv_time_5': '$ELR\\langle5\\rangle$',
+    'carla_rsv_time_10': '$ELR\\langle10\\rangle$',
+    'carla_abstract_time_2': '$ERS\\langle2\\rangle$',
+    'carla_abstract_time_3': '$ERS\\langle3\\rangle$',
+    'carla_abstract_time_5': '$ERS\\langle5\\rangle$',
+    'carla_abstract_time_10': '$ERS\\langle10\\rangle$',
+    'rss_v2_10_time_2': '$\\Psi_{10}^{*}\\langle2\\rangle$ (PhysCov)',
+    'rss_v2_10_time_3': '$\\Psi_{10}^{*}\\langle3\\rangle$ (PhysCov)',
+    'rss_v2_10_time_5': '$\\Psi_{10}^{*}\\langle5\\rangle$ (PhysCov)',
+    'rss_v2_10_time_10': '$\\Psi_{10}^{*}\\langle10\\rangle$ (PhysCov)',
 }
 graphs_to_show = ['carla_sem', 'carla_no_rel', 'carla_sem_rel', 'carla_rsv', 'carla_abstract',
                   'Label bin 0',
@@ -441,6 +441,18 @@ def meta_figure(arg_string, graphs_to_show=graphs_to_show):
     print('PNFNC')
     for index, graph_type in enumerate(graphs_to_show):
         label = label_map[graph_type] if graph_type in label_map else graph_type
+        if 'carla_rsv' == graph_type:
+            label = '$ELR$'
+        elif 'carla_abstract' == graph_type:
+            label = '$ERS$'
+        elif 'carla_no_rel' == graph_type:
+            label = '$EL$'
+        elif 'carla_sem_rel' == graph_type:
+            label = '$ER$'
+        elif 'carla_sem' == graph_type:
+            label = '$E$'
+        elif 'Label bin 0' == graph_type:
+            label = 'Codomain\nGround Truth'
         if graph_type not in new_perc_failures_unseen_dict:
             continue
         print(f'{label} num_clusters:', num_cluster_dict[graph_type][eighty_index])
@@ -456,8 +468,16 @@ def meta_figure(arg_string, graphs_to_show=graphs_to_show):
     ax.scatter(num_frames, 100, color='k', label='All Data Unique\n(Trivial Solution)', marker='*')
     ax.set_xlabel('Number of Equivalence Classes Train+Test')
     ax.set_ylabel('Percentage of Novel Failures Not Covered (PNFNC)')
-    legend = ax.legend(loc='lower right')
-    fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_within.png', bbox_extra_artists=(legend,),
+    # https://stackoverflow.com/questions/42103144/how-to-align-rows-in-matplotlib-legend-with-2-columns
+    legend = ax.legend(loc='lower right', framealpha=0.9)
+    if args.time:
+        legend = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), ncol=1)
+    fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_within.png',
+                bbox_extra_artists=(legend,),
+                bbox_inches='tight')
+    fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_within.pdf',
+                format='pdf',
+                bbox_extra_artists=(legend,),
                 bbox_inches='tight')
     fig.savefig(f'{output_path}/{"TIME_" if args.time else ""}new_num_clusters_80_20_trivial_legend_within.svg', bbox_extra_artists=(legend,),
                 bbox_inches='tight')
